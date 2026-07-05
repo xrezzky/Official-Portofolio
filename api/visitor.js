@@ -5,13 +5,13 @@
 // Strategi anti-spam berlapis:
 // 1. Rate limit per IP: max N request per menit (block kalau spam)
 // 2. Hash IP + User-Agent sebagai visitor key (bukan random ID dari client)
-// 3. Quota harian per visitor key (reset jam 00:00 waktu server)
+// 3. Quota BULANAN per visitor key (reset tanggal 1 tiap bulan, waktu server)
 // 4. Online counter pakai TTL — auto dianggap offline kalau tidak ping ulang
 //
 // ENV VARS wajib:
 //   FIREBASE_DATABASE_URL
 //   FIREBASE_SERVICE_ACCOUNT_KEY
-//   VISITOR_DAILY_QUOTA (opsional, default 3)
+//   VISITOR_MONTHLY_QUOTA (opsional, default 3)
 
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getDatabase } from 'firebase-admin/database';
@@ -63,9 +63,9 @@ function hashVisitor(ip, userAgent) {
   return createHash('sha256').update(ip + '|' + (userAgent || '')).digest('hex').slice(0, 24);
 }
 
-function todayKey() {
+function monthKey() {
   const d = new Date();
-  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  return `${d.getFullYear()}-${d.getMonth() + 1}`; // reset otomatis tiap tanggal 1
 }
 
 export default async function handler(req, res) {
@@ -110,31 +110,31 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const userAgent = req.headers['user-agent'] || '';
       const visitorKey = hashVisitor(ip, userAgent);
-      const quotaMax = parseInt(process.env.VISITOR_DAILY_QUOTA || '3', 10);
+      const quotaMax = parseInt(process.env.VISITOR_MONTHLY_QUOTA || '3', 10);
 
       // 1. Update presence (selalu, untuk online counter)
       await db.ref('onlineNow/' + visitorKey).set({
         lastPing: Date.now(),
       });
 
-      // 2. Cek & increment quota harian — server-side, tidak bisa dimanipulasi client
+      // 2. Cek & increment quota bulanan — server-side, tidak bisa dimanipulasi client
       const quotaRef = db.ref('visitTracking/' + visitorKey);
       const quotaSnap = await quotaRef.get();
       const quotaData = quotaSnap.val();
-      const today = todayKey();
+      const thisMonth = monthKey();
 
       let shouldCountVisit = false;
 
-      if (!quotaData || quotaData.date !== today) {
-        // Hari baru atau visitor baru — reset counter
-        await quotaRef.set({ date: today, count: 1 });
+      if (!quotaData || quotaData.month !== thisMonth) {
+        // Bulan baru atau visitor baru — reset counter
+        await quotaRef.set({ month: thisMonth, count: 1 });
         shouldCountVisit = true;
       } else if (quotaData.count < quotaMax) {
         await quotaRef.update({ count: quotaData.count + 1 });
         shouldCountVisit = true;
       }
-      // Kalau sudah lewat quota, shouldCountVisit tetap false — tidak nambah totalVisit
-      // tapi presence tetap di-set jadi online counter tetap akurat
+      // Kalau sudah lewat quota bulan ini, shouldCountVisit tetap false — tidak nambah
+      // totalVisit, tapi presence tetap di-set jadi online counter tetap akurat
 
       if (shouldCountVisit) {
         await db.ref('totalVisit').transaction((n) => (n || 0) + 1);
