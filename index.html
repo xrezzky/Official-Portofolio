@@ -94,28 +94,32 @@ function applyData(d){
     show('stats-section');
   } else hide('stats-section');
 
-  const socials=(d.socials||[]).filter(s=>s.visible!==false&&s.label);
+  // WhatsApp difilter keluar dari daftar sosial biasa — supaya tombol WA
+  // gak dobel di layar (WA sudah tampil lewat tombol Chat WhatsApp + floating + Komunitas)
+  const isWaEntry=s=>/whatsapp|wa\.me|wa\s?admin/i.test(s.label||'')||/wa\.me|whatsapp/i.test(s.url||'');
+  const socialsAll=(d.socials||[]).filter(s=>s.visible!==false&&s.label);
+  const socials=socialsAll.filter(s=>!isWaEntry(s));
   if(socials.length){
     el('socials-grid').innerHTML=socials.map(s=>`<a href="${s.url||'#'}" class="social-btn" target="_blank" rel="noopener" style="--lc:${s.color||'#fff'}"><div class="social-icon-wrap">${s.iconUrl?`<img src="${s.iconUrl}" class="social-img" alt="${s.label}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="social-emoji" style="${s.iconUrl?'display:none':''}">${s.emoji||'🔗'}</div></div><div class="social-info"><span class="social-name">${s.label}</span>${s.handle?`<span class="social-handle">${s.handle}</span>`:''}</div><svg class="social-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>`).join('');
     show('socials-section');
-    // ikon kecil sosial di sidebar (maks 4)
+    // ikon kecil sosial di sidebar (maks 5)
     el('sb-socials').innerHTML=socials.slice(0,5).map(s=>`<a href="${s.url||'#'}" target="_blank" rel="noopener" class="sb-social-ic" title="${s.label}">${s.iconUrl?`<img src="${s.iconUrl}" alt="${s.label}" onerror="this.style.display='none';this.nextSibling.style.display='inline'">`:''}<span style="${s.iconUrl?'display:none':''}">${s.emoji||'🔗'}</span></a>`).join('');
   } else { hide('socials-section'); el('sb-socials').innerHTML=''; }
 
-  // ── HERO CTA: cari link WhatsApp dari socials untuk tombol Chat WA ──
-  const waSocial=socials.find(s=>/whatsapp|wa\.me|wa\s?admin/i.test(s.label||'')||/wa\.me|whatsapp/i.test(s.url||''));
-  if(waSocial&&waSocial.url){
+  // ── HERO CTA: cari link WhatsApp dari socials (dicari sebelum difilter) ──
+  const waSocial=socialsAll.find(isWaEntry);
+  window._waUrl = (waSocial&&waSocial.url) ? waSocial.url : '';
+  if(window._waUrl){
     const waBtn=el('hero-cta-wa');
-    waBtn.href=waSocial.url;
+    waBtn.href=window._waUrl;
     waBtn.style.display='inline-flex';
     const floatWa=el('floating-wa');
-    floatWa.href=waSocial.url;
-    floatWa.style.display='flex';
+    floatWa.href=window._waUrl;
   } else {
     el('hero-cta-wa').style.display='none';
-    el('floating-wa').style.display='none';
   }
-  if(waSocial || (p.name)) show('hero-cta-row'); else hide('hero-cta-row');
+  if(window._waUrl || (p.name)) show('hero-cta-row'); else hide('hero-cta-row');
+  updateFloatingWa();
 
   const weblinks=(d.weblinks||[]).filter(w=>w.visible!==false&&w.label);
   if(weblinks.length){
@@ -162,15 +166,15 @@ function applyData(d){
   const policy=d.policy||{};
   if(policy.content){el('policy-content').innerHTML=waFormat(policy.content);show('policy-section');} else hide('policy-section');
 
+  // ── KOMUNITAS (disederhanakan jadi satu, gabungan grup+komunitas+saluran lama) ──
+  // Field baru yang disarankan: d.whatsapp.komunitas = [{name, desc, url}]
+  // (field lama wa.grup / wa.saluran tetap didukung, otomatis digabung ke sini)
   const wa=d.whatsapp||{};
-  const waGrup=(wa.grup||[]).filter(g=>g.name&&g.url);
-  if(waGrup.length){el('wa-grup-list').innerHTML=waGrup.map(g=>`<a href="${g.url}" class="wa-item" target="_blank" rel="noopener"><div class="wa-item-icon" style="background:rgba(37,211,102,0.12)"><svg width="18" height="18" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.121 1.524 5.855L.058 23.75a.5.5 0 0 0 .61.638l6.09-1.596A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.87 9.87 0 0 1-5.031-1.378l-.36-.214-3.732.978.995-3.636-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.466 0 9.9 4.434 9.9 9.9 0 5.466-4.434 9.9-9.9 9.9z"/></svg></div><div class="wa-item-info"><span class="wa-item-name">${g.name}</span>${g.desc?`<span class="wa-item-desc">${g.desc}</span>`:''}</div><div class="wa-item-badge" style="background:rgba(37,211,102,0.1);border-color:rgba(37,211,102,0.25);color:#86efac">Grup</div><svg class="social-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>`).join('');show('wa-grup-wrap');} else hide('wa-grup-wrap');
-  const waKom=(wa.komunitas||[]).filter(g=>g.name&&g.url);
-  if(waKom.length){el('wa-komunitas-list').innerHTML=waKom.map(g=>`<a href="${g.url}" class="wa-item" target="_blank" rel="noopener"><div class="wa-item-icon" style="background:rgba(37,211,102,0.12)"><svg width="18" height="18" viewBox="0 0 24 24" fill="#25D366"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg></div><div class="wa-item-info"><span class="wa-item-name">${g.name}</span>${g.desc?`<span class="wa-item-desc">${g.desc}</span>`:''}</div><div class="wa-item-badge" style="background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.25);color:#93c5fd">Komunitas</div><svg class="social-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>`).join('');show('wa-komunitas-wrap');} else hide('wa-komunitas-wrap');
-  const waSal=(wa.saluran||[]).filter(g=>g.name&&g.url);
-  if(waSal.length){el('wa-saluran-list').innerHTML=waSal.map(g=>`<a href="${g.url}" class="wa-item" target="_blank" rel="noopener"><div class="wa-item-icon" style="background:rgba(124,58,237,0.12)"><svg width="18" height="18" viewBox="0 0 24 24" fill="#a78bfa"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></div><div class="wa-item-info"><span class="wa-item-name">${g.name}</span>${g.desc?`<span class="wa-item-desc">${g.desc}</span>`:''}</div><div class="wa-item-badge" style="background:rgba(124,58,237,0.1);border-color:rgba(124,58,237,0.25);color:#c4b5fd">Saluran</div><svg class="social-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>`).join('');show('wa-saluran-wrap');} else hide('wa-saluran-wrap');
-  const hasWa=waGrup.length||waKom.length||waSal.length;
-  if(hasWa)show('wa-section');else hide('wa-section');
+  const komunitasList=[...(wa.komunitas||[]),...(wa.grup||[]),...(wa.saluran||[])].filter(g=>g.name&&g.url);
+  if(komunitasList.length){
+    el('wa-list').innerHTML=komunitasList.map(g=>`<a href="${g.url}" class="wa-item" target="_blank" rel="noopener"><div class="wa-item-icon" style="background:rgba(37,211,102,0.12)"><svg width="18" height="18" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.121 1.524 5.855L.058 23.75a.5.5 0 0 0 .61.638l6.09-1.596A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.87 9.87 0 0 1-5.031-1.378l-.36-.214-3.732.978.995-3.636-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.466 0 9.9 4.434 9.9 9.9 0 5.466-4.434 9.9-9.9 9.9z"/></svg></div><div class="wa-item-info"><span class="wa-item-name">${g.name}</span>${g.desc?`<span class="wa-item-desc">${g.desc}</span>`:''}</div><svg class="social-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>`).join('');
+    show('wa-section');
+  } else hide('wa-section');
 
   // ── BARU: Status Layanan (d.statusLayanan = [{name,desc,status}]) ──
   const statusList=(d.statusLayanan||[]).filter(s=>s.name);
@@ -296,10 +300,10 @@ html[data-theme="light"] .visitor-num{background:linear-gradient(135deg,#0f172a,
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
 
 /* ══ APP SHELL: sidebar + main ══ */
-.app{display:flex;min-height:100vh}
+.app{display:flex;min-height:100vh;min-height:100dvh;max-width:100vw;overflow-x:hidden}
 
 /* ── SIDEBAR ── */
-.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transform:translateX(0);transition:transform 0.25s ease}
+.sidebar{width:min(var(--sidebar-w),82vw);flex-shrink:0;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transform:translateX(0);transition:transform 0.25s ease}
 .sb-top{display:flex;align-items:center;gap:9px;padding:18px 18px 14px}
 .sb-logo-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#60aaff);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:800;font-size:13px;color:#fff;flex-shrink:0}
 .sb-logo-text{font-family:var(--font-d);font-weight:800;font-size:15px;letter-spacing:0.3px}
@@ -589,11 +593,18 @@ footer{border-top:1px solid var(--border);padding:16px 24px 8px;max-width:980px;
   .main-wrap{margin-left:0}
   .mtopbar{display:flex}
   .topbar-actions{display:none}
-  .page{padding:14px 14px 36px}#banner-bg{height:200px}#profile-avatar{width:82px;height:82px;border-radius:18px}.avatar-ring{border-radius:20px}.profile-row{margin-top:-42px;gap:14px}#profile-name{font-size:22px}.hero-body{padding:0 16px 20px}
+  .page{padding:14px 14px 36px;max-width:100%}#banner-bg{height:200px}#profile-avatar{width:82px;height:82px;border-radius:18px}.avatar-ring{border-radius:20px}.profile-row{margin-top:-42px;gap:14px}#profile-name{font-size:22px}.hero-body{padding:0 16px 20px}
   #stats-grid{grid-template-columns:repeat(2,1fr);gap:8px}.stat-value{font-size:17px}.card{padding:14px}.social-btn,.weblink-btn,.wa-item{padding:9px 11px}.social-icon-wrap,.weblink-icon,.wa-item-icon{width:34px;height:34px}
   .hero-cta{padding:10px 18px;font-size:12.5px}.hero-cta-row{gap:8px}
   .avatar-verified{width:22px;height:22px}.avatar-verified svg{width:10px;height:10px}
   footer{padding:16px 14px 8px}
+}
+/* Landscape HP (lebar tapi pendek) — banner jangan makan layar */
+@media(max-width:899px) and (orientation:landscape){
+  #banner-bg{height:140px}
+  .profile-row{margin-top:-30px}
+  #profile-avatar{width:64px;height:64px}
+  .sidebar{overflow-y:auto}
 }
 </style>
 </head>
@@ -759,11 +770,9 @@ footer{border-top:1px solid var(--border);padding:16px 24px 8px;max-width:980px;
       <div class="card">
         <div class="wa-header">
           <div class="wa-logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.121 1.524 5.855L.058 23.75a.5.5 0 0 0 .61.638l6.09-1.596A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.87 9.87 0 0 1-5.031-1.378l-.36-.214-3.732.978.995-3.636-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.466 0 9.9 4.434 9.9 9.9 0 5.466-4.434 9.9-9.9 9.9z"/></svg></div>
-          <div><div class="wa-title">WhatsApp Community</div><div class="wa-subtitle">Grup, Komunitas & Saluran resmi kami</div></div>
+          <div><div class="wa-title">Komunitas</div><div class="wa-subtitle">Gabung komunitas resmi kami di WhatsApp</div></div>
         </div>
-        <div id="wa-grup-wrap" style="display:none"><div class="wa-group-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:4px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Grup WhatsApp</div><div id="wa-grup-list"></div></div>
-        <div id="wa-komunitas-wrap" style="display:none"><div class="wa-group-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:4px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Komunitas WhatsApp</div><div id="wa-komunitas-list"></div></div>
-        <div id="wa-saluran-wrap" style="display:none"><div class="wa-group-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:4px"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>Saluran WhatsApp</div><div id="wa-saluran-list"></div></div>
+        <div id="wa-list"></div>
       </div>
     </div>
     <div class="section-block" id="services-section" style="display:none">
@@ -836,6 +845,7 @@ function closeSidebar(){ el('sidebar').classList.remove('open'); el('sidebar-ove
 
 window._faqData=[];
 window._worksData=[];
+window._currentPage='home';
 function goPage(name,btn){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.sb-item').forEach(function(b){b.classList.remove('active');});
@@ -843,9 +853,19 @@ function goPage(name,btn){
   if(pg) pg.classList.add('active');
   if(btn) btn.classList.add('active');
   else { var m=document.querySelector('.sb-item[data-pg="'+name+'"]'); if(m) m.classList.add('active'); }
+  window._currentPage=name;
+  updateFloatingWa();
   closeSidebar();
   window.scrollTo({top:0,behavior:'smooth'});
   if(name==='faq'){var s=document.getElementById('faq-search');if(s)s.value='';renderFaq(window._faqData||[],'')}
+}
+// Floating WA cuma tampil di luar Beranda — di Beranda sudah ada tombol
+// "Chat WhatsApp" di hero, jadi gak ada dua tombol WA sekaligus di layar.
+function updateFloatingWa(){
+  var fw=el('floating-wa');
+  if(!fw) return;
+  if(window._waUrl && window._currentPage!=='home'){ fw.style.display='flex'; }
+  else { fw.style.display='none'; }
 }
 function renderFaq(items,query){
   var c=document.getElementById('faq-list');if(!c)return;
@@ -928,6 +948,11 @@ function closeMediaModal(){
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeMediaModal();closeSidebar();}});
 document.addEventListener('contextmenu',function(e){var t=e.target;if(t.id==='profile-avatar'||t.closest&&t.closest('#banner-bg'))e.preventDefault();});
 document.addEventListener('dragstart',function(e){if(e.target.id==='profile-avatar')e.preventDefault();});
+
+// Tutup drawer sidebar otomatis saat rotasi layar / resize, biar gak ada
+// kondisi "nyangkut kebuka" pas HP diputar ke landscape atau balik lagi.
+window.addEventListener('resize', function(){ closeSidebar(); });
+window.addEventListener('orientationchange', function(){ closeSidebar(); });
 </script>
 </body>
 </html>
