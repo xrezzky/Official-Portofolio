@@ -54,8 +54,7 @@ function applyData(d){
 
   const p=d.profile||{};
   if(p.name){
-    const s=p.shortName||p.name.split(' ')[0];
-    setText('nav-logo',s); setText('sb-name',p.name);
+    setText('sb-name',p.name);
     setText('profile-name',p.name); show('profile-name');
   } else hide('profile-name');
   if(p.badge){  setText('profile-badge',p.badge);   show('profile-badge');
@@ -305,7 +304,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 /* ── SIDEBAR ── */
 .sidebar{width:min(var(--sidebar-w),82vw);flex-shrink:0;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transform:translateX(0);transition:transform 0.25s ease}
 .sb-top{display:flex;align-items:center;gap:9px;padding:18px 18px 14px}
-.sb-logo-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#60aaff);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:800;font-size:13px;color:#fff;flex-shrink:0}
+.sb-logo-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#60aaff);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:800;font-size:12px;color:#fff;flex-shrink:0;overflow:hidden;white-space:nowrap;letter-spacing:-0.3px}
 .sb-logo-text{font-family:var(--font-d);font-weight:800;font-size:15px;letter-spacing:0.3px}
 .sb-logo-sub{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:-2px}
 .sb-nav{flex:1;overflow-y:auto;padding:6px 12px}
@@ -615,9 +614,9 @@ footer{border-top:1px solid var(--border);padding:16px 24px 8px;max-width:980px;
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <aside class="sidebar" id="sidebar">
   <div class="sb-top">
-    <div class="sb-logo-mark" id="nav-logo"></div>
+    <div class="sb-logo-mark" id="nav-logo">XRZ</div>
     <div>
-      <div class="sb-logo-text">XRZ</div>
+      <div class="sb-logo-text">XREZZKY</div>
       <div class="sb-logo-sub">OFFICIAL</div>
     </div>
   </div>
