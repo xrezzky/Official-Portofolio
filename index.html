@@ -31,8 +31,17 @@ function waFormat(text){
     .replace(/\*([^*\n]+?)\*/g,'<strong>$1</strong>')
     .replace(/_([^_\n]+?)_/g,'<em>$1</em>')
     .replace(/~([^~\n]+?)~/g,'<s>$1</s>')
-    .replace(/`([^`]+?)`/g,'<code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:6px;font-size:0.9em;font-family:monospace;border:1px solid rgba(255,255,255,0.1)">$1</code>')
+    .replace(/`([^`]+?)`/g,'<code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;font-size:0.9em;font-family:monospace">$1</code>')
     .replace(/\n/g,'<br>');
+}
+
+function statusMeta(s){
+  s=(s||'').toLowerCase();
+  if(s==='online')      return {cls:'st-online',  label:'Online'};
+  if(s==='offline')     return {cls:'st-offline', label:'Offline'};
+  if(s==='maintenance') return {cls:'st-maint',    label:'Maintenance'};
+  if(s==='development') return {cls:'st-dev',      label:'Development'};
+  return {cls:'st-online',label:s?s.charAt(0).toUpperCase()+s.slice(1):'Online'};
 }
 
 function applyData(d){
@@ -44,14 +53,25 @@ function applyData(d){
   if(t.bgCard)          document.documentElement.style.setProperty('--card',t.bgCard);
 
   const p=d.profile||{};
-  if(p.name){ const s=p.shortName||p.name.split(' ')[0]; setText('nav-logo',s); setText('profile-name',p.name); show('profile-name'); } else hide('profile-name');
-  if(p.badge){  setText('profile-badge',p.badge);   show('profile-badge'); }   else hide('profile-badge');
+  if(p.name){
+    const s=p.shortName||p.name.split(' ')[0];
+    setText('nav-logo',s); setText('sb-name',p.name);
+    setText('profile-name',p.name); show('profile-name');
+  } else hide('profile-name');
+  if(p.badge){  setText('profile-badge',p.badge);   show('profile-badge');
+    setText('sb-badge',p.badge); show('sb-badge'); }
+  else { hide('profile-badge'); hide('sb-badge'); }
   if(p.tagline){setText('profile-tagline',p.tagline);show('profile-tagline');} else hide('profile-tagline');
   if(p.bio){    setText('profile-bio',p.bio);        show('profile-bio'); }    else hide('profile-bio');
   if(p.location){setText('chip-location',p.location);show('chip-location-wrap');} else hide('chip-location-wrap');
   if(p.joinYear){setText('chip-join','Bergabung '+p.joinYear);show('chip-join-wrap');} else hide('chip-join-wrap');
-  if(p.avatarUrl){el('profile-avatar').src=p.avatarUrl;el('profile-avatar').style.background='none';}
-  else{el('profile-avatar').removeAttribute('src');el('profile-avatar').style.background='linear-gradient(135deg,var(--accent),var(--accent2))';}
+  if(p.avatarUrl){
+    el('profile-avatar').src=p.avatarUrl;el('profile-avatar').style.background='none';
+    el('sb-avatar').src=p.avatarUrl;el('sb-avatar').style.background='none';
+  } else {
+    el('profile-avatar').removeAttribute('src');el('profile-avatar').style.background='linear-gradient(135deg,var(--accent),var(--accent2))';
+    el('sb-avatar').removeAttribute('src');el('sb-avatar').style.background='linear-gradient(135deg,var(--accent),var(--accent2))';
+  }
   if(p.bannerUrl){const b=el('banner-bg');b.style.backgroundImage='url('+p.bannerUrl+')';b.style.backgroundSize='cover';b.style.backgroundPosition='center';}
 
   // Verified check di avatar — muncul kalau ada badge (dianggap terverifikasi)
@@ -78,7 +98,9 @@ function applyData(d){
   if(socials.length){
     el('socials-grid').innerHTML=socials.map(s=>`<a href="${s.url||'#'}" class="social-btn" target="_blank" rel="noopener" style="--lc:${s.color||'#fff'}"><div class="social-icon-wrap">${s.iconUrl?`<img src="${s.iconUrl}" class="social-img" alt="${s.label}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="social-emoji" style="${s.iconUrl?'display:none':''}">${s.emoji||'🔗'}</div></div><div class="social-info"><span class="social-name">${s.label}</span>${s.handle?`<span class="social-handle">${s.handle}</span>`:''}</div><svg class="social-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>`).join('');
     show('socials-section');
-  } else hide('socials-section');
+    // ikon kecil sosial di sidebar (maks 4)
+    el('sb-socials').innerHTML=socials.slice(0,5).map(s=>`<a href="${s.url||'#'}" target="_blank" rel="noopener" class="sb-social-ic" title="${s.label}">${s.iconUrl?`<img src="${s.iconUrl}" alt="${s.label}" onerror="this.style.display='none';this.nextSibling.style.display='inline'">`:''}<span style="${s.iconUrl?'display:none':''}">${s.emoji||'🔗'}</span></a>`).join('');
+  } else { hide('socials-section'); el('sb-socials').innerHTML=''; }
 
   // ── HERO CTA: cari link WhatsApp dari socials untuk tombol Chat WA ──
   const waSocial=socials.find(s=>/whatsapp|wa\.me|wa\s?admin/i.test(s.label||'')||/wa\.me|whatsapp/i.test(s.url||''));
@@ -131,7 +153,7 @@ function applyData(d){
 
   const anns=(d.announcements||[]).filter(a=>a.text);
   if(anns.length){
-    el('ann-list').innerHTML=anns.map((a,i)=>`<div class="ann-item"><div class="ann-main"><div class="ann-header">${a.tag?`<span class="ann-tag" style="background:${a.color||'#3b8df1'}22;color:${a.color||'#3b8df1'};border-color:${a.color||'#3b8df1'}44">${a.tag}</span>`:''}<button class="share-btn" onclick="shareContent('${encodeURIComponent((a.tag?'['+a.tag+'] ':'')+a.text.replace(/[*_~`]/g,''))}','ann')" title="Bagikan"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>${a.time?`<span class="ann-time">${a.time}</span>`:''}</div><span class="ann-text">${waFormat(a.text)}</span>${a.mediaUrl?`<div class="ann-media-wrap" onclick="openMediaModal('${a.mediaUrl}','${a.mediaType||'image'}')"><div class="ann-media-protect">${a.mediaType==='video'?`<video src="${a.mediaUrl}" class="ann-media" playsinline preload="metadata"></video>`:`<img src="${a.mediaUrl}" class="ann-media" alt="media" draggable="false">`}<div class="ann-media-overlay"><span>Ketuk untuk perbesar</span></div></div></div>`:''}</div></div>`).join('');
+    el('ann-list').innerHTML=anns.map((a,i)=>`<div class="ann-item"><div class="ann-main"><div class="ann-header">${a.tag?`<span class="ann-tag" style="background:${a.color||'#3b8df1'}22;color:${a.color||'#3b8df1'};border-color:${a.color||'#3b8df1'}44">${a.tag}</span>`:''}<button class="share-btn" onclick="shareContent('${encodeURIComponent((a.tag?'['+a.tag+'] ':'')+a.text.replace(/[*_~\`]/g,''))}','ann')" title="Bagikan"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>${a.time?`<span class="ann-time">${a.time}</span>`:''}</div><span class="ann-text">${waFormat(a.text)}</span>${a.mediaUrl?`<div class="ann-media-wrap" onclick="openMediaModal('${a.mediaUrl}','${a.mediaType||'image'}')"><div class="ann-media-protect">${a.mediaType==='video'?`<video src="${a.mediaUrl}" class="ann-media" playsinline preload="metadata"></video>`:`<img src="${a.mediaUrl}" class="ann-media" alt="media" draggable="false">`}<div class="ann-media-overlay"><span>Ketuk untuk perbesar</span></div></div></div>`:''}</div></div>`).join('');
     show('ann-section');
   } else hide('ann-section');
 
@@ -150,6 +172,31 @@ function applyData(d){
   const hasWa=waGrup.length||waKom.length||waSal.length;
   if(hasWa)show('wa-section');else hide('wa-section');
 
+  // ── BARU: Status Layanan (d.statusLayanan = [{name,desc,status}]) ──
+  const statusList=(d.statusLayanan||[]).filter(s=>s.name);
+  if(statusList.length){
+    el('status-list').innerHTML=statusList.map(s=>{const m=statusMeta(s.status);return `<div class="status-row"><div class="status-row-info"><span class="status-row-name">${s.name}</span>${s.desc?`<span class="status-row-desc">${s.desc}</span>`:''}</div><span class="status-pill ${m.cls}">${m.label}</span></div>`;}).join('');
+    show('status-section');
+  } else hide('status-section');
+
+  // ── BARU: System Monitor (d.systemMonitor = [{name,status}]) ──
+  const monitorList=(d.systemMonitor||[]).filter(s=>s.name);
+  if(monitorList.length){
+    el('monitor-list').innerHTML=monitorList.map(s=>{const m=statusMeta(s.status);return `<div class="status-row"><div class="status-row-info"><span class="status-row-name">${s.name}</span></div><span class="status-pill ${m.cls}">${m.label}</span></div>`;}).join('');
+    show('monitor-section');
+  } else hide('monitor-section');
+
+  // ── BARU: Karya Saya / Project (d.works = [{title,desc,category,image,tag,url}]) ──
+  window._worksData=Array.isArray(d.works)?d.works:[];
+  if(window._worksData.length){ renderWorks(window._worksData,'Semua'); show('works-section'); } else hide('works-section');
+
+  // ── BARU: Update Terbaru (d.updates = [{date,title,tag}]) ──
+  const updates=(d.updates||[]).filter(u=>u.title);
+  if(updates.length){
+    el('updates-list').innerHTML=updates.map(u=>`<div class="update-row"><span class="update-dot"></span><div class="update-info">${u.date?`<span class="update-date">${u.date}</span>`:''}<span class="update-title">${u.title}</span></div>${u.tag?`<span class="update-tag">${u.tag}</span>`:''}</div>`).join('');
+    show('updates-section');
+  } else hide('updates-section');
+
   window._faqData=Array.isArray(d.faq)?d.faq:[];
   renderFaq(window._faqData,'');
 
@@ -159,9 +206,11 @@ function applyData(d){
 }
 
 // ── API BASE ──────────────────────────────────────────────────────────
+// Ganti ke URL Vercel deployment kamu kalau beda domain dengan web ini.
+// Kalau API di-deploy di domain yang sama (xrezzkybeta.my.id), biarkan kosong.
 const API_BASE = '';
 
-// ── AMBIL SITEDATA VIA VERCEL API ────────
+// ── AMBIL SITEDATA VIA VERCEL API (bukan langsung ke Firebase) ────────
 async function fetchSiteData(){
   try{
     const res = await fetch(API_BASE + '/api/sitedata');
@@ -173,11 +222,16 @@ async function fetchSiteData(){
   }
 }
 fetchSiteData();
+// Polling ringan tiap 20 detik untuk simulasi "realtime" tanpa perlu
+// koneksi websocket langsung ke Firebase dari browser
 setInterval(fetchSiteData, 20000);
 
-// ── VISITOR COUNTER ───────────────────────
+// ── VISITOR COUNTER — server-side via Vercel API ───────────────────────
+// Semua logika anti-spam (rate limit, fingerprint IP, quota harian)
+// sekarang berjalan di server (/api/visitor.js), bukan di localStorage
+// client yang gampang dihapus/dimanipulasi.
 (function(){
-  var PING_INTERVAL_MS = 30000; 
+  var PING_INTERVAL_MS = 30000; // ping tiap 30 detik supaya status online tetap aktif
 
   function pingVisitor(){
     fetch(API_BASE + '/api/visitor', { method:'POST' })
@@ -201,11 +255,16 @@ setInterval(fetchSiteData, 20000);
       .catch(function(){});
   }
 
+  // Ping pertama kali saat load
   pingVisitor();
   refreshCounts();
+
+  // Ping berkala biar online counter tetap hidup
   setInterval(pingVisitor, PING_INTERVAL_MS);
   setInterval(refreshCounts, 15000);
 
+  // Saat tab ditutup — beri tahu server segera pakai sendBeacon
+  // (lebih reliable daripada fetch biasa saat halaman unload)
   function leaveNow(){
     if(navigator.sendBeacon){
       navigator.sendBeacon(API_BASE + '/api/visitor-leave');
@@ -217,365 +276,541 @@ setInterval(fetchSiteData, 20000);
 </script>
 
 <style>
-/* 🚀 SUPERCHARGED MODERN CSS 🚀 */
 :root{
-  --accent: #3b8df1;
-  --accent2: #60aaff; /* Lebih terang dikit buat gradien cantik */
-  --bg: #090a0f; /* Lebih pekat, modern dark */
-  --card: rgba(21, 24, 32, 0.6); /* Kaca transparan (Glassmorphism) */
-  --card2: rgba(26, 29, 38, 0.7);
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.15);
-  --text: #f0f2f8;
-  --muted: #8b95a5;
-  --font-d: 'Syne', sans-serif;
-  --font-b: 'DM Sans', sans-serif;
-  --r: 24px; /* Sudut lebih melengkung ala Bento Box */
-  --glow: rgba(59, 141, 241, 0.4);
+  --accent:#3b8df1;--accent2:#2563c7;--bg:#0d0f14;--card:#151820;
+  --card2:#1a1d26;--border:rgba(255,255,255,0.07);--text:#e2e6f0;
+  --muted:#5e6478;--font-d:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;--r:14px;
+  --sidebar-w:248px;
 }
 html[data-theme="light"]{
-  --bg: #f8fafc;
-  --card: rgba(255, 255, 255, 0.7);
-  --card2: rgba(241, 245, 249, 0.7);
-  --border: rgba(15, 23, 42, 0.08);
-  --border-hover: rgba(15, 23, 42, 0.15);
-  --text: #0f172a;
-  --muted: #64748b;
-  --glow: rgba(59, 141, 241, 0.2);
+  --bg:#f5f7fa;--card:#ffffff;--card2:#f0f2f6;
+  --border:rgba(15,23,42,0.09);--text:#151820;--muted:#6b7280;
 }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden;transition:background 0.25s ease,color 0.25s ease}
+.card,.hero,.hero-body,.stat-card,.social-btn,.weblink-btn,.wa-item,.ann-item,.faq-item,.visitor-card,.gmail-btn,.sidebar,#media-modal img,#media-modal video{transition:background 0.25s ease,border-color 0.25s ease,color 0.25s ease}
+html[data-theme="light"] body::before{opacity:0.4}
+html[data-theme="light"] .stat-value{background:linear-gradient(135deg,#0f172a,rgba(15,23,42,0.65));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+html[data-theme="light"] .visitor-num{background:linear-gradient(135deg,#0f172a,rgba(15,23,42,0.65));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body {
-  background: var(--bg); color: var(--text); font-family: var(--font-b);
-  font-size: 15px; line-height: 1.6; min-height: 100vh; overflow-x: hidden;
-  transition: background 0.4s ease, color 0.4s ease;
+/* ══ APP SHELL: sidebar + main ══ */
+.app{display:flex;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transform:translateX(0);transition:transform 0.25s ease}
+.sb-top{display:flex;align-items:center;gap:9px;padding:18px 18px 14px}
+.sb-logo-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#60aaff);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:800;font-size:13px;color:#fff;flex-shrink:0}
+.sb-logo-text{font-family:var(--font-d);font-weight:800;font-size:15px;letter-spacing:0.3px}
+.sb-logo-sub{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:-2px}
+.sb-nav{flex:1;overflow-y:auto;padding:6px 12px}
+.sb-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:13.5px;font-weight:600;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:var(--font-b);margin-bottom:2px}
+.sb-item svg{width:17px;height:17px;flex-shrink:0}
+.sb-item:hover{background:var(--card2);color:var(--text)}
+.sb-item.active{background:rgba(59,141,241,0.12);color:#7bb8f8}
+.sb-profile{margin:10px 12px 16px;padding:14px 12px;border-radius:14px;background:var(--card2);border:1px solid var(--border);text-align:center}
+.sb-avatar-wrap{position:relative;width:52px;height:52px;margin:0 auto 8px}
+#sb-avatar{width:52px;height:52px;border-radius:14px;object-fit:cover;display:block;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+#sb-name{font-family:var(--font-d);font-size:13px;font-weight:700;line-height:1.3}
+#sb-badge{display:inline-block;margin-top:6px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(59,141,241,0.14);color:#7bb8f8;border:1px solid rgba(59,141,241,0.28)}
+.sb-tagline{font-size:10.5px;color:var(--muted);margin-top:4px}
+#sb-socials{display:flex;justify-content:center;gap:6px;margin-top:11px;flex-wrap:wrap}
+.sb-social-ic{width:26px;height:26px;border-radius:8px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;text-decoration:none;overflow:hidden}
+.sb-social-ic img{width:14px;height:14px;object-fit:contain}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:190}
+.sidebar-overlay.show{display:block}
+
+/* ── MOBILE TOPBAR ── */
+.mtopbar{display:none;position:sticky;top:0;z-index:150;align-items:center;justify-content:space-between;padding:0 14px;height:52px;background:rgba(13,15,20,0.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.hamburger{width:36px;height:36px;border-radius:9px;background:var(--card2);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hamburger svg{width:18px;height:18px}
+.mtopbar .nav-logo{font-size:15px}
+
+.main-wrap{flex:1;min-width:0;margin-left:var(--sidebar-w);display:flex;flex-direction:column}
+.topbar-actions{display:flex;align-items:center;gap:8px;padding:0 28px;height:58px;justify-content:flex-end;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:90;background:var(--bg)}
+.nav-logo{font-family:var(--font-d);font-weight:800;font-size:17px;background:linear-gradient(135deg,var(--accent),#60aaff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;min-width:10px}
+.nav-contact{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;background:rgba(59,141,241,0.1);border:1px solid rgba(59,141,241,0.22);color:#7bb8f8;text-decoration:none;font-size:12px;font-weight:600;transition:all 0.15s;white-space:nowrap}
+.nav-contact:hover{background:rgba(59,141,241,0.18)}
+.theme-toggle{width:34px;height:34px;border-radius:9px;background:var(--card2);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.18s}
+.theme-toggle:hover{border-color:rgba(59,141,241,0.35);color:var(--accent)}
+.theme-toggle svg{width:16px;height:16px}
+.theme-toggle .icon-sun{display:none}
+html[data-theme="light"] .theme-toggle .icon-moon{display:none}
+html[data-theme="light"] .theme-toggle .icon-sun{display:block}
+.page{display:none;max-width:980px;margin:0 auto;padding:22px 24px 50px;width:100%}
+.page.active{display:block}
+.accent-glow{position:fixed;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(59,141,241,0.05) 0%,transparent 70%);top:-200px;right:-200px;pointer-events:none;z-index:0}
+.accent-glow2{position:fixed;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,199,0.04) 0%,transparent 70%);bottom:-150px;left:-150px;pointer-events:none;z-index:0}
+
+/* ── HERO PREMIUM ── */
+.hero{position:relative;border-radius:24px;overflow:hidden;border:1px solid var(--border);margin-bottom:20px;box-shadow:0 20px 60px -20px rgba(0,0,0,0.4)}
+#banner-bg{height:280px;background:linear-gradient(135deg,#0a0e18 0%,#0f1830 45%,#0a1220 100%);position:relative;background-size:cover;background-position:center}
+#banner-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,11,17,0.15) 0%,rgba(9,11,17,0.55) 55%,var(--card) 96%)}
+#banner-bg::before{content:'';position:absolute;inset:0;background:
+    radial-gradient(ellipse 70% 90% at 15% 20%,rgba(59,141,241,0.28) 0%,transparent 60%),
+    radial-gradient(ellipse 55% 70% at 85% 15%,rgba(37,99,199,0.2) 0%,transparent 55%),
+    radial-gradient(ellipse 40% 50% at 50% 100%,rgba(96,170,255,0.12) 0%,transparent 60%);
+  z-index:1}
+.hero-shine{position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,0.06) 45%,transparent 60%);z-index:2;pointer-events:none}
+.hero-badge-float{position:absolute;top:18px;right:18px;z-index:3;display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:20px;background:rgba(13,15,20,0.55);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);font-size:11px;font-weight:600;color:#fff}
+.hero-badge-float svg{width:12px;height:12px;color:#4ade80}
+.hero-body{background:var(--card);padding:0 26px 28px;position:relative}
+.profile-row{display:flex;align-items:flex-end;gap:18px;margin-top:-58px;position:relative;z-index:3}
+.avatar-wrap{position:relative;flex-shrink:0}
+#profile-avatar{width:104px;height:104px;border-radius:24px;border:4px solid var(--card);object-fit:cover;display:block;background:linear-gradient(135deg,var(--accent),#60aaff);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,0.3)}
+.avatar-ring{position:absolute;inset:-4px;border-radius:26px;background:conic-gradient(from 0deg,var(--accent),#60aaff,var(--accent2),var(--accent));z-index:-1;opacity:0.7;animation:spin-ring 6s linear infinite}
+@keyframes spin-ring{to{transform:rotate(360deg)}}
+.avatar-verified{position:absolute;bottom:-2px;right:-2px;width:26px;height:26px;border-radius:50%;background:var(--accent);border:3px solid var(--card);display:flex;align-items:center;justify-content:center;z-index:2}
+.avatar-verified svg{width:12px;height:12px;color:#fff}
+.profile-meta{padding-bottom:6px;flex:1;min-width:0}
+.profile-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;background:linear-gradient(135deg,rgba(59,141,241,0.18),rgba(96,170,255,0.1));border:1px solid rgba(59,141,241,0.3);color:#7bb8f8;margin-bottom:8px;letter-spacing:0.2px}
+#profile-name{font-family:var(--font-d);font-size:28px;font-weight:800;letter-spacing:-0.8px;line-height:1.1;background:linear-gradient(135deg,var(--text) 30%,var(--accent) 150%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+html[data-theme="light"] #profile-name{background:linear-gradient(135deg,#0f172a 30%,var(--accent) 150%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#profile-tagline{font-size:13.5px;color:var(--muted);margin-top:3px;font-weight:500}
+.profile-info-row{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap}
+.profile-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:500}
+#profile-bio{margin-top:16px;font-size:13.5px;line-height:1.8;color:var(--muted);max-width:600px}
+.hero-cta-row{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.hero-cta{display:inline-flex;align-items:center;gap:7px;padding:11px 22px;border-radius:12px;font-size:13px;font-weight:700;text-decoration:none;transition:all 0.2s;cursor:pointer;border:none;font-family:var(--font-b)}
+.hero-cta.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 8px 20px -6px rgba(59,141,241,0.5)}
+.hero-cta.primary:hover{transform:translateY(-2px);box-shadow:0 12px 26px -6px rgba(59,141,241,0.6)}
+.hero-cta.secondary{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+.hero-cta.secondary:hover{border-color:rgba(59,141,241,0.4);transform:translateY(-2px)}
+.hero-cta svg{width:15px;height:15px}
+
+.sec-label{font-family:var(--font-d);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+#stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat-card{background:var(--card2);border:1px solid var(--border);border-radius:16px;padding:16px 10px;text-align:center;transition:all 0.22s cubic-bezier(.2,.8,.2,1);cursor:default;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(59,141,241,0.06),transparent 60%);opacity:0;transition:opacity 0.2s}
+.stat-card:hover{border-color:rgba(59,141,241,0.35);transform:translateY(-3px);box-shadow:0 12px 28px -8px rgba(59,141,241,0.18)}
+.stat-card:hover::before{opacity:1}
+.stat-icon{font-size:19px;display:block;margin-bottom:6px}
+.stat-value{display:block;font-family:var(--font-d);font-size:19px;font-weight:800;background:linear-gradient(135deg,#fff,rgba(255,255,255,0.65));-webkit-background-clip:text;-webkit-text-fill-color:transparent;position:relative}
+.stat-label{font-size:10px;color:var(--muted);margin-top:2px;display:block;font-weight:600;letter-spacing:0.2px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;position:relative;overflow:hidden;margin-bottom:14px}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(59,141,241,0.2),transparent)}
+.card-title{font-family:var(--font-d);font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.card-title .cv-link{margin-left:auto;font-size:11px;font-weight:600;color:var(--accent);text-decoration:none;font-family:var(--font-b)}
+.card-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent)}
+
+/* two-column grid for dashboard cards on wide screens */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:899px){.grid-2{grid-template-columns:1fr}}
+
+#socials-grid{display:flex;flex-direction:column;gap:7px}
+.social-btn{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:11px;background:var(--card2);border:1px solid var(--border);color:var(--text);text-decoration:none;transition:all 0.18s;position:relative;overflow:hidden}
+.social-btn::before{content:'';position:absolute;inset:0;background:var(--lc,var(--accent));opacity:0;transition:opacity 0.18s}
+.social-btn:hover::before{opacity:0.06}
+.social-btn:hover{border-color:var(--lc,var(--accent));transform:translateX(3px)}
+.social-icon-wrap{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.social-img{width:24px;height:24px;object-fit:contain;border-radius:4px}
+.social-emoji{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px}
+.social-info{flex:1;min-width:0}
+.social-name{display:block;font-size:13px;font-weight:600;line-height:1.2}
+.social-handle{display:block;font-size:11px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.social-arrow{width:13px;height:13px;opacity:0.3;flex-shrink:0;transition:all 0.18s}
+.social-btn:hover .social-arrow{opacity:1;transform:translate(2px,-2px)}
+#weblinks-grid{display:flex;flex-direction:column;gap:7px}
+.weblink-btn{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:11px;background:var(--card2);border:1px solid var(--border);color:var(--text);text-decoration:none;transition:all 0.18s;position:relative;overflow:hidden}
+.weblink-btn::before{content:'';position:absolute;inset:0;background:var(--lc,var(--accent));opacity:0;transition:opacity 0.18s}
+.weblink-btn:hover::before{opacity:0.07}
+.weblink-btn:hover{border-color:var(--lc,var(--accent));transform:translateX(3px)}
+.weblink-icon{width:38px;height:38px;border-radius:10px;background:rgba(59,141,241,0.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.weblink-info{flex:1;min-width:0}
+.weblink-name{display:block;font-size:13px;font-weight:600;line-height:1.2}
+.weblink-desc{display:block;font-size:11px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#services-grid{display:flex;flex-direction:column;gap:9px}
+.service-card{display:flex;align-items:center;gap:11px;padding:11px;border-radius:10px;background:var(--card2);border:1px solid var(--border);transition:all 0.18s}
+.service-card:hover{border-color:rgba(59,141,241,0.25)}
+.service-icon{width:38px;height:38px;border-radius:9px;background:rgba(59,141,241,0.08);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.service-title{font-size:12px;font-weight:600}
+.service-desc{font-size:11px;color:var(--muted);margin-top:1px}
+
+/* ── STATUS LAYANAN / SYSTEM MONITOR (baru) ── */
+.status-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;background:var(--card2);border:1px solid var(--border);margin-bottom:7px}
+.status-row-info{display:flex;flex-direction:column;min-width:0}
+.status-row-name{font-size:12.5px;font-weight:600}
+.status-row-desc{font-size:11px;color:var(--muted);margin-top:1px}
+.status-pill{flex-shrink:0;padding:4px 11px;border-radius:20px;font-size:10.5px;font-weight:700;letter-spacing:0.2px}
+.status-pill.st-online{background:rgba(34,197,94,0.12);color:#4ade80}
+.status-pill.st-offline{background:rgba(239,68,68,0.12);color:#f87171}
+.status-pill.st-maint{background:rgba(234,179,8,0.14);color:#fbbf24}
+.status-pill.st-dev{background:rgba(168,85,247,0.14);color:#c4b5fd}
+
+/* ── CABANG KAMI ── */
+.branches-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.branch-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;transition:all 0.2s;position:relative;overflow:hidden}
+.branch-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent)}
+.branch-card:hover{border-color:rgba(59,141,241,0.3);transform:translateY(-2px);box-shadow:0 10px 30px rgba(59,141,241,0.08)}
+.branch-head{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+.branch-logo-wrap{width:46px;height:46px;border-radius:12px;overflow:hidden;flex-shrink:0;border:1px solid var(--border)}
+.branch-logo{width:100%;height:100%;object-fit:cover;display:block}
+.branch-logo-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-family:var(--font-d);font-weight:800;font-size:18px}
+.branch-head-info{flex:1;min-width:0}
+.branch-name{font-family:var(--font-d);font-size:14px;font-weight:800;line-height:1.2}
+.branch-tagline{font-size:11px;color:var(--muted);margin-top:1px}
+.branch-desc{font-size:12px;color:var(--text);opacity:0.75;line-height:1.6;margin-bottom:12px}
+.branch-socials{display:flex;gap:7px;flex-wrap:wrap}
+.branch-social-btn{width:32px;height:32px;border-radius:9px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:all 0.18s;overflow:hidden}
+.branch-social-btn:hover{border-color:var(--bc,var(--accent));background:color-mix(in srgb,var(--bc,var(--accent)) 12%,var(--card2))}
+.branch-social-btn img{width:16px;height:16px;object-fit:contain}
+.branch-emoji{font-size:14px}
+@media(max-width:599px){
+  .branches-grid{grid-template-columns:1fr}
 }
+#ann-list{display:flex;flex-direction:column;gap:12px}
+.ann-item{background:var(--card2);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color 0.18s}
+.ann-item:hover{border-color:rgba(59,141,241,0.25)}
+.ann-main{padding:12px 14px}
+.ann-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.ann-tag{flex-shrink:0;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:0.4px;border:1px solid}
+.ann-text{display:block;font-size:13px;color:var(--text);opacity:0.85;line-height:1.6}
+.ann-time{font-size:10px;color:var(--muted);margin-left:auto}
+.ann-media-wrap{margin-top:10px;border-radius:10px;overflow:hidden;cursor:pointer;position:relative}
+.ann-media-protect{position:relative;user-select:none;-webkit-user-select:none}
+.ann-media-protect img,.ann-media-protect video{width:100%;max-height:280px;object-fit:cover;display:block;border-radius:10px;pointer-events:none}
+.ann-media-overlay{position:absolute;inset:0;background:rgba(0,0,0,0);transition:background 0.2s;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;border-radius:10px}
+.ann-media-overlay span{font-size:11px;color:rgba(255,255,255,0);background:rgba(0,0,0,0);padding:4px 10px;border-radius:20px;transition:all 0.2s}
+.ann-media-wrap:hover .ann-media-overlay{background:rgba(0,0,0,0.25)}
+.ann-media-wrap:hover .ann-media-overlay span{color:#fff;background:rgba(0,0,0,0.5)}
+#media-modal{display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;padding:16px}
+#media-modal.open{display:flex}
+#media-modal-inner{position:relative;max-width:100%;max-height:100%;display:flex;align-items:center;justify-content:center}
+#media-modal img,#media-modal video{max-width:min(860px,calc(100vw - 32px));max-height:90vh;border-radius:12px;object-fit:contain;pointer-events:none;-webkit-user-select:none;user-select:none}
+#media-modal video{pointer-events:auto}
+#modal-close{position:fixed;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:background 0.15s;z-index:9001}
+#modal-close:hover{background:rgba(255,255,255,0.28)}
+/* ── FLOATING WHATSAPP BUTTON ── */
+.floating-wa{position:fixed;bottom:22px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#25D366,#1ea952);display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 8px 24px -4px rgba(37,211,102,0.5);z-index:500;transition:transform 0.2s;overflow:visible}
+.floating-wa:hover{transform:scale(1.08)}
+.floating-wa svg{width:28px;height:28px;color:#fff;position:relative;z-index:2}
+.floating-wa-ping{position:absolute;inset:0;border-radius:50%;background:#25D366;opacity:0.6;animation:wa-ping 2.2s cubic-bezier(0,0,0.2,1) infinite}
+@keyframes wa-ping{75%,100%{transform:scale(1.7);opacity:0}}
+@media(max-width:599px){.floating-wa{width:50px;height:50px;bottom:16px;right:14px}.floating-wa svg{width:24px;height:24px}}
 
-/* Animasi Bintik Halus di Background */
-body::before {
-  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+.prose{font-size:13px;line-height:1.85;color:var(--text);opacity:0.85}
+.prose strong{color:var(--text);font-weight:700}
+.prose em{font-style:italic}
+.prose s{text-decoration:line-through;opacity:0.6}
+.prose p{margin-bottom:12px}
+.section-block{margin-bottom:18px}
+.visitor-bar{display:flex;gap:10px;margin-bottom:18px}
+.visitor-card{flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.visitor-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.visitor-dot.green{background:#22c55e;box-shadow:0 0 8px #22c55e;animation:vblink 2s infinite}
+.visitor-dot.blue{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+@keyframes vblink{0%,100%{opacity:1}50%{opacity:0.4}}
+.visitor-info{flex:1}
+.visitor-num{font-family:var(--font-d);font-size:18px;font-weight:800;display:block;background:linear-gradient(135deg,#fff,rgba(255,255,255,0.65));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.visitor-label{font-size:10px;color:var(--muted);display:block;margin-top:1px}
+.page-section{margin-bottom:20px}
+.page-section-title{font-family:var(--font-d);font-size:20px;font-weight:800;margin-bottom:6px}
+.page-section-sub{font-size:12px;color:var(--muted);margin-bottom:18px}
+.gmail-btn{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:rgba(234,67,53,0.08);border:1px solid rgba(234,67,53,0.18);text-decoration:none;color:var(--text);transition:all 0.18s;margin-top:16px}
+.gmail-btn:hover{border-color:rgba(234,67,53,0.35);background:rgba(234,67,53,0.13);transform:translateY(-1px)}
+.gmail-icon{width:40px;height:40px;border-radius:10px;background:rgba(234,67,53,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.gmail-info .gl{font-size:12px;font-weight:600;margin-bottom:2px}
+.gmail-info .ge{font-size:13px;font-weight:700;color:#ea4335}
+footer{border-top:1px solid var(--border);padding:16px 24px 8px;max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+#footer-copy,#footer-tagline{font-size:11px;color:var(--muted)}
+.wa-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.wa-logo{width:36px;height:36px;border-radius:10px;background:rgba(37,211,102,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wa-title{font-family:var(--font-d);font-size:14px;font-weight:700}
+.wa-subtitle{font-size:11px;color:var(--muted)}
+.wa-group-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:14px 0 8px;display:flex;align-items:center;gap:7px}
+.wa-group-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.wa-item{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:11px;background:var(--card2);border:1px solid var(--border);color:var(--text);text-decoration:none;transition:all 0.18s;margin-bottom:7px;position:relative;overflow:hidden}
+.wa-item::before{content:'';position:absolute;inset:0;background:rgba(37,211,102,0.03);opacity:0;transition:opacity 0.18s}
+.wa-item:hover::before{opacity:1}
+.wa-item:hover{border-color:rgba(37,211,102,0.28);transform:translateX(3px)}
+.wa-item-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wa-item-info{flex:1;min-width:0}
+.wa-item-name{display:block;font-size:13px;font-weight:600;line-height:1.2}
+.wa-item-desc{display:block;font-size:11px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wa-item-badge{flex-shrink:0;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;border:1px solid;letter-spacing:0.3px}
+.faq-search{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:13px;outline:none;margin-bottom:16px;font-family:var(--font-b);transition:border-color 0.18s}
+.faq-search:focus{border-color:rgba(59,141,241,0.4)}
+.faq-search::placeholder{color:var(--muted)}
+.faq-empty{text-align:center;padding:32px;color:var(--muted);font-size:13px}
+.faq-item{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;transition:border-color 0.18s}
+.faq-item.open{border-color:rgba(59,141,241,0.3)}
+.faq-q{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;gap:12px;user-select:none;-webkit-user-select:none}
+.faq-q-text{font-size:13px;font-weight:600;line-height:1.4;flex:1}
+.faq-icon{width:22px;height:22px;border-radius:50%;background:rgba(59,141,241,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.25s;font-size:12px;color:var(--accent)}
+.faq-item.open .faq-icon{background:rgba(59,141,241,0.2);transform:rotate(180deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height 0.3s ease}
+.faq-item.open .faq-a{max-height:600px}
+.faq-a-inner{padding:12px 16px 16px;font-size:13px;color:var(--text);opacity:0.85;line-height:1.75;border-top:1px solid var(--border)}
+.faq-cat{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:18px 0 8px;display:flex;align-items:center;gap:7px}
+.faq-cat::after{content:'';flex:1;height:1px;background:var(--border)}
+.share-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 7px;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0}
+.share-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(59,141,241,0.08)}
+.share-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(21,24,32,0.96);color:var(--text);font-size:12px;padding:10px 20px;border-radius:20px;z-index:9999;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;border:1px solid var(--border);backdrop-filter:blur(10px)}
+.share-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#profile-avatar,#banner-bg img{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+
+/* ── UPDATE TERBARU (baru) ── */
+#updates-list{display:flex;flex-direction:column;gap:2px;position:relative;padding-left:6px}
+.update-row{display:flex;align-items:flex-start;gap:11px;padding:10px 4px;position:relative}
+.update-row::before{content:'';position:absolute;left:3px;top:22px;bottom:-8px;width:1px;background:var(--border)}
+.update-row:last-child::before{display:none}
+.update-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);margin-top:6px;flex-shrink:0}
+.update-info{flex:1;display:flex;flex-direction:column;min-width:0}
+.update-date{font-size:10.5px;color:var(--muted);font-weight:600}
+.update-title{font-size:12.5px;margin-top:2px;line-height:1.5}
+.update-tag{flex-shrink:0;padding:3px 9px;border-radius:6px;font-size:10px;font-weight:700;background:rgba(59,141,241,0.12);color:#7bb8f8;letter-spacing:0.3px;height:fit-content}
+
+/* ── KARYA SAYA / WORKS (baru) ── */
+.work-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;padding-bottom:2px}
+.work-tab{flex-shrink:0;padding:6px 14px;border-radius:8px;font-size:11.5px;font-weight:600;background:var(--card2);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:var(--font-b)}
+.work-tab.active{background:rgba(59,141,241,0.14);color:#7bb8f8;border-color:rgba(59,141,241,0.3)}
+.works-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.work-card{text-decoration:none;color:var(--text);border-radius:14px;overflow:hidden;background:var(--card2);border:1px solid var(--border);transition:all 0.18s;display:block}
+.work-card:hover{border-color:rgba(59,141,241,0.3);transform:translateY(-2px)}
+.work-thumb{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.work-info{padding:9px 10px}
+.work-title{font-size:11.5px;font-weight:700;line-height:1.3}
+.work-cat{font-size:10px;color:var(--muted);margin-top:2px}
+
+@media(min-width:900px){
+  .topbar-actions{padding:0 40px}
+  .page{padding:28px 0 60px}#banner-bg{height:340px}#profile-avatar{width:120px;height:120px;border-radius:28px}.avatar-ring{border-radius:30px}.profile-row{margin-top:-64px;gap:24px}#profile-name{font-size:34px}.hero-body{padding:0 36px 34px}
+  #stats-grid{grid-template-columns:repeat(4,1fr);gap:14px}.stat-card{padding:22px 16px}.stat-value{font-size:24px}.card{padding:24px}.page-section-title{font-size:24px}
+  footer{padding:16px 40px 8px}
 }
-html[data-theme="light"] body::before { opacity: 0.5; }
-
-/* 🌟 Dynamic Ambient Glow (Lampu Belakang) */
-.accent-glow, .accent-glow2 {
-  position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
-  filter: blur(80px); opacity: 0.6; animation: floatGlow 10s ease-in-out infinite alternate;
+@media(min-width:600px) and (max-width:899px){
+  #banner-bg{height:250px}#profile-avatar{width:100px;height:100px;border-radius:24px}.profile-row{margin-top:-52px}#profile-name{font-size:28px}.hero-body{padding:0 26px 28px}#stats-grid{grid-template-columns:repeat(4,1fr);gap:11px}
 }
-.accent-glow { width: 600px; height: 600px; background: radial-gradient(circle, var(--glow) 0%, transparent 60%); top: -200px; right: -200px; }
-.accent-glow2 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, transparent 60%); bottom: -150px; left: -150px; animation-delay: -5s; }
-@keyframes floatGlow { 0% { transform: scale(1) translate(0, 0); } 100% { transform: scale(1.1) translate(-30px, 30px); } }
-
-/* Element transisi dasar */
-.card, .hero, .hero-body, .stat-card, .social-btn, .weblink-btn, .wa-item, .ann-item, .faq-item, .visitor-card, .gmail-btn, .nav {
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-/* 💠 NAVIGASI GLASSMORPHISM */
-.nav {
-  position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px; height: 60px; background: rgba(9, 10, 15, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-}
-html[data-theme="light"] .nav { background: rgba(248, 250, 252, 0.6); }
-.nav-logo { font-family: var(--font-d); font-weight: 800; font-size: 18px; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.nav-tabs { display: flex; gap: 4px; background: var(--card2); padding: 4px; border-radius: 12px; border: 1px solid var(--border); }
-.nav-tab { padding: 6px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; border: none; background: transparent; transition: all 0.2s; font-family: var(--font-b); }
-.nav-tab:hover { color: var(--text); background: rgba(255, 255, 255, 0.05); }
-.nav-tab.active { background: var(--card); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid var(--border); }
-.nav-right { display: flex; align-items: center; gap: 10px; }
-.nav-contact { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 10px; background: linear-gradient(135deg, rgba(59,141,241,0.1), rgba(59,141,241,0.05)); border: 1px solid rgba(59,141,241,0.3); color: #7bb8f8; text-decoration: none; font-size: 12px; font-weight: 700; transition: all 0.2s; }
-.nav-contact:hover { background: var(--accent); color: #fff; box-shadow: 0 4px 12px var(--glow); transform: translateY(-1px); }
-
-/* Tombol Tema */
-.theme-toggle { width: 36px; height: 36px; border-radius: 10px; background: var(--card2); border: 1px solid var(--border); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.theme-toggle:hover { border-color: var(--accent); color: var(--accent); background: rgba(59,141,241,0.1); transform: rotate(15deg); }
-.theme-toggle svg { width: 18px; height: 18px; }
-.theme-toggle .icon-sun { display: none; }
-html[data-theme="light"] .theme-toggle .icon-moon { display: none; }
-html[data-theme="light"] .theme-toggle .icon-sun { display: block; }
-
-.page { display: none; max-width: 760px; margin: 0 auto; padding: 30px 20px 60px; width: 100%; position: relative; z-index: 1; }
-.page.active { display: block; animation: fadeUp 0.4s ease forwards; }
-@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-/* ── HERO PREMIUM (BENTO STYLE) ── */
-.hero { position: relative; border-radius: var(--r); overflow: hidden; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: 0 24px 50px -12px rgba(0,0,0,0.3); background: var(--card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-#banner-bg { height: 260px; position: relative; background-size: cover; background-position: center; border-bottom: 1px solid var(--border); }
-#banner-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.4) 60%, var(--card) 100%); }
-.hero-badge-float { position: absolute; top: 20px; right: 20px; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 30px; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.15); font-size: 11px; font-weight: 700; color: #fff; letter-spacing: 0.5px; text-transform: uppercase; }
-.hero-badge-float svg { width: 10px; height: 10px; color: #4ade80; animation: pulseDot 2s infinite; }
-@keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
-
-.hero-body { padding: 0 32px 32px; position: relative; z-index: 2; }
-.profile-row { display: flex; align-items: flex-end; gap: 24px; margin-top: -64px; position: relative; z-index: 3; }
-.avatar-wrap { position: relative; flex-shrink: 0; }
-#profile-avatar { width: 128px; height: 128px; border-radius: 32px; border: 5px solid var(--card); object-fit: cover; display: block; background: var(--card2); box-shadow: 0 12px 30px rgba(0,0,0,0.4); z-index: 2; position: relative; }
-.avatar-ring { position: absolute; inset: -3px; border-radius: 34px; background: conic-gradient(from 0deg, var(--accent), var(--accent2), #a855f7, var(--accent)); z-index: 1; opacity: 0.9; animation: spin-ring 4s linear infinite; filter: blur(2px); }
-@keyframes spin-ring { to { transform: rotate(360deg); } }
-.avatar-verified { position: absolute; bottom: 0; right: -4px; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); border: 4px solid var(--card); display: flex; align-items: center; justify-content: center; z-index: 3; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-.avatar-verified svg { width: 16px; height: 16px; color: #fff; }
-
-.profile-meta { padding-bottom: 8px; flex: 1; min-width: 0; }
-.profile-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; background: rgba(59,141,241,0.1); border: 1px solid rgba(59,141,241,0.2); color: var(--accent); margin-bottom: 10px; letter-spacing: 1px; text-transform: uppercase; }
-#profile-name { font-family: var(--font-d); font-size: 32px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; color: var(--text); text-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-html[data-theme="light"] #profile-name { color: #0f172a; }
-#profile-tagline { font-size: 14px; color: var(--muted); margin-top: 6px; font-weight: 500; }
-.profile-info-row { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
-.profile-chip { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text); opacity: 0.8; font-weight: 500; background: var(--card2); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); }
-#profile-bio { margin-top: 20px; font-size: 14px; line-height: 1.8; color: var(--text); opacity: 0.85; max-width: 100%; }
-
-/* Buttons */
-.hero-cta-row { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
-.hero-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border-radius: 14px; font-size: 14px; font-weight: 700; text-decoration: none; transition: all 0.3s; cursor: pointer; border: none; font-family: var(--font-b); flex: 1; min-width: 160px; }
-.hero-cta.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; box-shadow: 0 8px 24px rgba(59,141,241,0.3); border: 1px solid rgba(255,255,255,0.1); }
-.hero-cta.primary:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(59,141,241,0.4); filter: brightness(1.1); }
-.hero-cta.secondary { background: var(--card2); color: var(--text); border: 1px solid var(--border); backdrop-filter: blur(10px); }
-.hero-cta.secondary:hover { background: rgba(255,255,255,0.05); border-color: var(--border-hover); transform: translateY(-3px); }
-
-/* ── BENTO SECTIONS ── */
-.sec-label { font-family: var(--font-d); font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; margin-left: 4px; }
-.section-block { margin-bottom: 24px; }
-
-/* Grid Cards */
-.card { background: var(--card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: var(--r); padding: 24px; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
-.card-title { font-family: var(--font-d); font-size: 15px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; color: var(--text); }
-.card-dot { width: 8px; height: 8px; border-radius: 4px; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
-
-/* Stats Bento */
-#stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.stat-card { background: var(--card); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 16px; padding: 20px 12px; text-align: center; cursor: default; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-.stat-card:hover { border-color: var(--accent); transform: translateY(-4px) scale(1.02); box-shadow: 0 12px 30px rgba(59,141,241,0.15); background: var(--card2); }
-.stat-icon { font-size: 24px; display: block; margin-bottom: 8px; filter: drop-shadow(0 2px 8px rgba(255,255,255,0.2)); }
-.stat-value { display: block; font-family: var(--font-d); font-size: 24px; font-weight: 800; color: var(--text); }
-.stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; display: block; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-
-/* Bento Lists (Socials, Links) */
-#socials-grid, #weblinks-grid, #services-grid { display: flex; flex-direction: column; gap: 10px; }
-.social-btn, .weblink-btn, .wa-item, .service-card { display: flex; align-items: center; gap: 16px; padding: 14px 16px; border-radius: 16px; background: var(--card2); border: 1px solid var(--border); color: var(--text); text-decoration: none; position: relative; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-.social-btn:hover, .weblink-btn:hover, .wa-item:hover, .service-card:hover { border-color: var(--lc, var(--accent)); transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); background: rgba(255,255,255,0.03); }
-.social-btn::before, .weblink-btn::before, .wa-item::before { content: ''; position: absolute; inset: 0; background: var(--lc, var(--accent)); opacity: 0; transition: opacity 0.3s; }
-.social-btn:hover::before, .weblink-btn:hover::before { opacity: 0.05; }
-.social-icon-wrap, .weblink-icon, .service-icon, .wa-item-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 20px; box-shadow: inset 0 2px 4px rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.03); }
-.social-img { width: 24px; height: 24px; object-fit: contain; }
-.social-info, .weblink-info, .wa-item-info { flex: 1; min-width: 0; }
-.social-name, .weblink-name, .wa-item-name, .service-title { display: block; font-size: 15px; font-weight: 700; line-height: 1.3; }
-.social-handle, .weblink-desc, .wa-item-desc, .service-desc { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.social-arrow { width: 16px; height: 16px; opacity: 0.3; flex-shrink: 0; transition: all 0.3s; }
-.social-btn:hover .social-arrow, .weblink-btn:hover .social-arrow, .wa-item:hover .social-arrow { opacity: 1; transform: translateX(4px); color: var(--lc, var(--accent)); }
-
-/* Visitor Bar Bento */
-.visitor-bar { display: flex; gap: 12px; margin-bottom: 24px; }
-.visitor-card { flex: 1; background: var(--card); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s; cursor: default; }
-.visitor-card:hover { transform: translateY(-3px); border-color: var(--border-hover); }
-.visitor-dot { width: 10px; height: 10px; border-radius: 5px; flex-shrink: 0; }
-.visitor-dot.green { background: #4ade80; box-shadow: 0 0 12px #4ade80; animation: vblink 2s infinite; }
-.visitor-dot.blue { background: var(--accent); box-shadow: 0 0 12px var(--accent); }
-@keyframes vblink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-.visitor-num { font-family: var(--font-d); font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.2; }
-.visitor-label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-
-/* Cabang Bento */
-.branches-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.branch-card { background: var(--card); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 20px; padding: 20px; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-.branch-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(59,141,241,0.15); background: var(--card2); }
-.branch-head { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
-.branch-logo-wrap { width: 50px; height: 50px; border-radius: 14px; overflow: hidden; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
-.branch-logo-fallback { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-family: var(--font-d); font-size: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
-.branch-name { font-family: var(--font-d); font-size: 16px; font-weight: 800; }
-.branch-tagline { font-size: 12px; color: var(--muted); }
-.branch-desc { font-size: 13px; color: var(--text); opacity: 0.8; margin-bottom: 16px; line-height: 1.6; }
-.branch-socials { display: flex; gap: 8px; flex-wrap: wrap; }
-.branch-social-btn { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
-.branch-social-btn:hover { border-color: var(--bc, var(--accent)); background: var(--bc, var(--accent)); transform: translateY(-2px); }
-
-/* Announcement */
-.ann-item { background: var(--card2); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: all 0.3s; }
-.ann-item:hover { border-color: var(--accent); box-shadow: 0 8px 24px rgba(0,0,0,0.2); transform: translateY(-2px); }
-.ann-main { padding: 16px; }
-.ann-header { margin-bottom: 10px; }
-.ann-tag { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; border: 1px solid; text-transform: uppercase; letter-spacing: 0.5px; }
-.ann-text { font-size: 14px; line-height: 1.7; color: var(--text); opacity: 0.9; }
-
-/* FAQ */
-.faq-search { width: 100%; background: var(--card2); border: 1px solid var(--border); border-radius: 16px; padding: 14px 20px; color: var(--text); font-size: 14px; outline: none; margin-bottom: 20px; font-family: var(--font-b); transition: all 0.3s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
-.faq-search:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 4px rgba(59,141,241,0.15); }
-.faq-item { background: var(--card); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 12px; transition: all 0.3s; }
-.faq-item:hover { border-color: var(--border-hover); }
-.faq-item.open { border-color: var(--accent); box-shadow: 0 8px 24px rgba(59,141,241,0.1); background: var(--card2); }
-.faq-q { padding: 16px 20px; font-size: 14px; font-weight: 700; }
-.faq-a-inner { padding: 0 20px 20px; font-size: 14px; opacity: 0.8; }
-
-/* Whatsapp Floating (Modernized) */
-.floating-wa { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 30px; background: linear-gradient(135deg, #25D366, #128C7E); display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(37,211,102,0.4); z-index: 500; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.floating-wa:hover { transform: scale(1.1) translateY(-5px); box-shadow: 0 15px 40px rgba(37,211,102,0.6); }
-.floating-wa svg { width: 30px; height: 30px; color: #fff; z-index: 2; }
-
-/* Media Queries (Responsive) */
-@media(max-width: 768px) {
-  #stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .branches-grid { grid-template-columns: 1fr; }
-  .nav { padding: 0 16px; height: 56px; }
-  .page { padding: 20px 16px 60px; }
-  .hero-body { padding: 0 24px 24px; }
-  #profile-avatar { width: 100px; height: 100px; border-radius: 24px; border-width: 4px; }
-  .profile-row { margin-top: -50px; }
-  #profile-name { font-size: 26px; }
-  .floating-wa { bottom: 20px; right: 20px; width: 54px; height: 54px; }
-}
-@media(max-width: 480px) {
-  .nav-tabs { background: transparent; border: none; }
-  .nav-tab { padding: 6px 10px; font-size: 11px; }
-  .nav-contact { display: none; }
-  .card { padding: 16px; }
-  .social-btn, .weblink-btn, .wa-item { padding: 12px; }
-  .social-icon-wrap, .weblink-icon, .wa-item-icon { width: 36px; height: 36px; }
-  .hero-cta { width: 100%; min-width: 100%; }
+/* ── RESPONSIVE: sidebar → off-canvas drawer di mobile ── */
+@media(max-width:899px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0);box-shadow:0 0 40px rgba(0,0,0,0.5)}
+  .main-wrap{margin-left:0}
+  .mtopbar{display:flex}
+  .topbar-actions{display:none}
+  .page{padding:14px 14px 36px}#banner-bg{height:200px}#profile-avatar{width:82px;height:82px;border-radius:18px}.avatar-ring{border-radius:20px}.profile-row{margin-top:-42px;gap:14px}#profile-name{font-size:22px}.hero-body{padding:0 16px 20px}
+  #stats-grid{grid-template-columns:repeat(2,1fr);gap:8px}.stat-value{font-size:17px}.card{padding:14px}.social-btn,.weblink-btn,.wa-item{padding:9px 11px}.social-icon-wrap,.weblink-icon,.wa-item-icon{width:34px;height:34px}
+  .hero-cta{padding:10px 18px;font-size:12.5px}.hero-cta-row{gap:8px}
+  .avatar-verified{width:22px;height:22px}.avatar-verified svg{width:10px;height:10px}
+  footer{padding:16px 14px 8px}
 }
 </style>
 </head>
 <body>
-<div class="accent-glow"></div>
-<div class="accent-glow2"></div>
-<nav class="nav">
-  <div class="nav-logo" id="nav-logo"></div>
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="goPage('home',this)">Beranda</button>
-    <button class="nav-tab" onclick="goPage('faq',this)">FAQ</button>
-    <button class="nav-tab" onclick="goPage('tentang',this)">Tentang</button>
-    <button class="nav-tab" onclick="goPage('kebijakan',this)">Kebijakan</button>
+<div class="app">
+
+<!-- ═══ SIDEBAR ═══ -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sb-top">
+    <div class="sb-logo-mark" id="nav-logo"></div>
+    <div>
+      <div class="sb-logo-text">XREZZKY</div>
+      <div class="sb-logo-sub">OFFICIAL</div>
+    </div>
   </div>
-  <div class="nav-right">
+  <nav class="sb-nav">
+    <button class="sb-item active" data-pg="home" onclick="goPage('home',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>
+      Beranda
+    </button>
+    <button class="sb-item" data-pg="faq" onclick="goPage('faq',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      FAQ
+    </button>
+    <button class="sb-item" data-pg="tentang" onclick="goPage('tentang',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+      Tentang
+    </button>
+    <button class="sb-item" data-pg="kebijakan" onclick="goPage('kebijakan',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 6v6c0 5 3.8 8.7 9 10 5.2-1.3 9-5 9-10V6l-9-4z"/></svg>
+      Kebijakan
+    </button>
+  </nav>
+  <div class="sb-profile">
+    <div class="sb-avatar-wrap"><img id="sb-avatar" alt="Avatar"></div>
+    <div id="sb-name"></div>
+    <div id="sb-badge" style="display:none"></div>
+    <div id="sb-socials"></div>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main-wrap">
+  <div class="mtopbar">
+    <button class="hamburger" onclick="openSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="nav-logo">XRZ</div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Ganti tema">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
+  <div class="topbar-actions">
     <button class="theme-toggle" onclick="toggleTheme()" title="Ganti tema">
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     </button>
     <a href="mailto:xrezzkystore.idn@gmail.com" class="nav-contact">Kontak Admin</a>
   </div>
-</nav>
 
-<div class="page active" id="page-home">
-  <div class="hero">
-    <div id="banner-bg">
-      <div class="hero-shine"></div>
-      <div class="hero-badge-float" id="hero-status-badge" style="display:none">
-        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-        <span>CS Online</span>
+  <div class="accent-glow"></div>
+  <div class="accent-glow2"></div>
+
+  <div class="page active" id="page-home">
+    <div class="hero">
+      <div id="banner-bg">
+        <div class="hero-shine"></div>
+        <div class="hero-badge-float" id="hero-status-badge" style="display:none">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+          <span>CS Online</span>
+        </div>
       </div>
-    </div>
-    <div class="hero-body">
-      <div class="profile-row">
-        <div class="avatar-wrap">
-          <div class="avatar-ring"></div>
-          <img id="profile-avatar" alt="Avatar">
-          <div class="avatar-verified" id="avatar-verified-badge" style="display:none">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      <div class="hero-body">
+        <div class="profile-row">
+          <div class="avatar-wrap">
+            <div class="avatar-ring"></div>
+            <img id="profile-avatar" alt="Avatar">
+            <div class="avatar-verified" id="avatar-verified-badge" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+          <div class="profile-meta">
+            <div class="profile-badge" id="profile-badge" style="display:none"></div>
+            <h1 id="profile-name" style="display:none"></h1>
+            <div id="profile-tagline" style="display:none"></div>
           </div>
         </div>
-        <div class="profile-meta">
-          <div class="profile-badge" id="profile-badge" style="display:none"></div>
-          <h1 id="profile-name" style="display:none"></h1>
-          <div id="profile-tagline" style="display:none"></div>
+        <div class="profile-info-row">
+          <div class="profile-chip" id="chip-location-wrap" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:3px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="chip-location"></span></div>
+          <div class="profile-chip" id="chip-join-wrap" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:3px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="chip-join"></span></div>
+        </div>
+        <p id="profile-bio" style="display:none"></p>
+        <div class="hero-cta-row" id="hero-cta-row" style="display:none">
+          <a href="#" id="hero-cta-wa" class="hero-cta primary" target="_blank" rel="noopener" style="display:none">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.121 1.524 5.855L.058 23.75a.5.5 0 0 0 .61.638l6.09-1.596A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.87 9.87 0 0 1-5.031-1.378l-.36-.214-3.732.978.995-3.636-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.466 0 9.9 4.434 9.9 9.9 0 5.466-4.434 9.9-9.9 9.9z"/></svg>
+            <span>Chat WhatsApp</span>
+          </a>
+          <button class="hero-cta secondary" onclick="goPage('faq',document.querySelector('.sb-item[data-pg=faq]'))">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Lihat FAQ</span>
+          </button>
         </div>
       </div>
-      <div class="profile-info-row">
-        <div class="profile-chip" id="chip-location-wrap" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="display:inline;vertical-align:-2px;margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="chip-location"></span></div>
-        <div class="profile-chip" id="chip-join-wrap" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="display:inline;vertical-align:-2px;margin-right:4px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="chip-join"></span></div>
+    </div>
+
+    <div class="visitor-bar">
+      <div class="visitor-card">
+        <div class="visitor-dot green"></div>
+        <div class="visitor-info">
+          <span class="visitor-num" id="visitor-online">0</span>
+          <span class="visitor-label">Online sekarang</span>
+        </div>
       </div>
-      <p id="profile-bio" style="display:none"></p>
-      <div class="hero-cta-row" id="hero-cta-row" style="display:none">
-        <a href="#" id="hero-cta-wa" class="hero-cta primary" target="_blank" rel="noopener" style="display:none">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.121 1.524 5.855L.058 23.75a.5.5 0 0 0 .61.638l6.09-1.596A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.87 9.87 0 0 1-5.031-1.378l-.36-.214-3.732.978.995-3.636-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.466 0 9.9 4.434 9.9 9.9 0 5.466-4.434 9.9-9.9 9.9z"/></svg>
-          <span>Chat WhatsApp</span>
-        </a>
-        <button class="hero-cta secondary" onclick="goPage('faq',document.querySelector('.nav-tab[onclick*=faq]'))">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <span>Lihat FAQ</span>
-        </button>
+      <div class="visitor-card">
+        <div class="visitor-dot blue"></div>
+        <div class="visitor-info">
+          <span class="visitor-num" id="visitor-total">0</span>
+          <span class="visitor-label">Total pengunjung</span>
+        </div>
       </div>
+    </div>
+
+    <div class="section-block" id="stats-section" style="display:none">
+      <div class="sec-label">Overview</div><div id="stats-grid"></div>
+    </div>
+
+    <!-- BARU: Status Layanan + System Monitor -->
+    <div class="section-block grid-2">
+      <div class="card" id="status-section" style="display:none">
+        <div class="card-title"><div class="card-dot"></div> Status Layanan</div>
+        <div id="status-list"></div>
+      </div>
+      <div class="card" id="monitor-section" style="display:none">
+        <div class="card-title"><div class="card-dot"></div> System Monitor</div>
+        <div id="monitor-list"></div>
+      </div>
+    </div>
+
+    <div class="section-block" id="ann-section" style="display:none">
+      <div class="card"><div class="card-title"><div class="card-dot"></div> Pengumuman Terbaru</div><div id="ann-list"></div></div>
+    </div>
+
+    <!-- BARU: Karya Saya / Project + Update Terbaru -->
+    <div class="section-block grid-2">
+      <div class="card" id="works-section" style="display:none">
+        <div class="card-title"><div class="card-dot"></div> Karya Saya</div>
+        <div class="work-tabs" id="work-tabs"></div>
+        <div class="works-grid" id="works-grid"></div>
+      </div>
+      <div class="card" id="updates-section" style="display:none">
+        <div class="card-title"><div class="card-dot"></div> Update Terbaru</div>
+        <div id="updates-list"></div>
+      </div>
+    </div>
+
+    <div class="section-block" id="socials-section" style="display:none">
+      <div class="card"><div class="card-title"><div class="card-dot"></div> Sosial Media</div><div id="socials-grid"></div></div>
+    </div>
+    <div class="section-block" id="weblinks-section" style="display:none">
+      <div class="card"><div class="card-title"><div class="card-dot"></div> Link Website & Aplikasi</div><div id="weblinks-grid"></div></div>
+    </div>
+    <div class="section-block" id="wa-section" style="display:none">
+      <div class="card">
+        <div class="wa-header">
+          <div class="wa-logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.121 1.524 5.855L.058 23.75a.5.5 0 0 0 .61.638l6.09-1.596A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.87 9.87 0 0 1-5.031-1.378l-.36-.214-3.732.978.995-3.636-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.466 0 9.9 4.434 9.9 9.9 0 5.466-4.434 9.9-9.9 9.9z"/></svg></div>
+          <div><div class="wa-title">WhatsApp Community</div><div class="wa-subtitle">Grup, Komunitas & Saluran resmi kami</div></div>
+        </div>
+        <div id="wa-grup-wrap" style="display:none"><div class="wa-group-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:4px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Grup WhatsApp</div><div id="wa-grup-list"></div></div>
+        <div id="wa-komunitas-wrap" style="display:none"><div class="wa-group-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:4px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Komunitas WhatsApp</div><div id="wa-komunitas-list"></div></div>
+        <div id="wa-saluran-wrap" style="display:none"><div class="wa-group-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:4px"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>Saluran WhatsApp</div><div id="wa-saluran-list"></div></div>
+      </div>
+    </div>
+    <div class="section-block" id="services-section" style="display:none">
+      <div class="card"><div class="card-title"><div class="card-dot"></div> Layanan</div><div id="services-grid"></div></div>
+    </div>
+    <div class="section-block" id="branches-section" style="display:none">
+      <div class="sec-label">Cabang Kami</div>
+      <div id="branches-grid" class="branches-grid"></div>
     </div>
   </div>
 
-  <div class="visitor-bar">
-    <div class="visitor-card">
-      <div class="visitor-dot green"></div>
-      <div class="visitor-info">
-        <span class="visitor-num" id="visitor-online">0</span>
-        <span class="visitor-label">Online sekarang</span>
-      </div>
-    </div>
-    <div class="visitor-card">
-      <div class="visitor-dot blue"></div>
-      <div class="visitor-info">
-        <span class="visitor-num" id="visitor-total">0</span>
-        <span class="visitor-label">Total pengunjung</span>
-      </div>
+  <div class="page" id="page-faq">
+    <div class="page-section"><div class="page-section-title">FAQ</div><div class="page-section-sub">Pertanyaan yang sering ditanyakan</div></div>
+    <input class="faq-search" id="faq-search" placeholder="Cari pertanyaan..." oninput="renderFaq(window._faqData||[],this.value)">
+    <div id="faq-list"><div class="faq-empty">Belum ada FAQ.</div></div>
+  </div>
+
+  <div class="page" id="page-tentang">
+    <div class="page-section"><div class="page-section-title">Tentang Kami</div><div class="page-section-sub">Kenali lebih jauh siapa kami</div></div>
+    <div class="card" id="about-section" style="display:none"><div class="card-title"><div class="card-dot"></div> Tentang</div><div class="prose" id="about-content"></div></div>
+    <div class="card"><div class="card-title"><div class="card-dot"></div> Hubungi Admin</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Untuk pertanyaan, laporan, atau kerjasama:</p>
+      <a href="mailto:xrezzkystore.idn@gmail.com" class="gmail-btn"><div class="gmail-icon"><svg width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 24L4 10h40z"/><path fill="#FBBC04" d="M4 10v28l10-14z"/><path fill="#34A853" d="M44 10v28L34 24z"/><path fill="#4285F4" d="M4 38h40L24 24z"/><path fill="#C5221F" d="M4 10l20 14 20-14z" opacity=".3"/></svg></div><div class="gmail-info"><div class="gl">Gmail Admin</div><div class="ge">xrezzkystore.idn@gmail.com</div></div></a>
     </div>
   </div>
 
-  <div class="section-block" id="ann-section" style="display:none">
-    <div class="card"><div class="card-title"><div class="card-dot"></div> Pengumuman Terbaru</div><div id="ann-list"></div></div>
-  </div>
-  <div class="section-block" id="stats-section" style="display:none">
-    <div class="sec-label">Overview</div><div id="stats-grid"></div>
-  </div>
-  <div class="section-block" id="socials-section" style="display:none">
-    <div class="card"><div class="card-title"><div class="card-dot"></div> Sosial Media</div><div id="socials-grid"></div></div>
-  </div>
-  <div class="section-block" id="weblinks-section" style="display:none">
-    <div class="card"><div class="card-title"><div class="card-dot"></div> Link Website & Aplikasi</div><div id="weblinks-grid"></div></div>
-  </div>
-  <div class="section-block" id="wa-section" style="display:none">
-    <div class="card">
-      <div class="wa-header">
-        <div class="wa-logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.121 1.524 5.855L.058 23.75a.5.5 0 0 0 .61.638l6.09-1.596A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.87 9.87 0 0 1-5.031-1.378l-.36-.214-3.732.978.995-3.636-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.466 0 9.9 4.434 9.9 9.9 0 5.466-4.434 9.9-9.9 9.9z"/></svg></div>
-        <div><div class="wa-title" style="font-size:16px;">WhatsApp Community</div><div class="wa-subtitle">Grup, Komunitas & Saluran resmi kami</div></div>
-      </div>
-      <div id="wa-grup-wrap" style="display:none"><div class="wa-group-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:4px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Grup WhatsApp</div><div id="wa-grup-list"></div></div>
-      <div id="wa-komunitas-wrap" style="display:none"><div class="wa-group-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:4px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Komunitas WhatsApp</div><div id="wa-komunitas-list"></div></div>
-      <div id="wa-saluran-wrap" style="display:none"><div class="wa-group-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:4px"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>Saluran WhatsApp</div><div id="wa-saluran-list"></div></div>
+  <div class="page" id="page-kebijakan">
+    <div class="page-section"><div class="page-section-title">Kebijakan & Aturan</div><div class="page-section-sub">Harap baca dan pahami kebijakan kami</div></div>
+    <div class="card" id="policy-section" style="display:none"><div class="card-title"><div class="card-dot"></div> Kebijakan</div><div class="prose" id="policy-content"></div></div>
+    <div class="card"><div class="card-title"><div class="card-dot"></div> Pertanyaan Kebijakan</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Ada pertanyaan terkait kebijakan?</p>
+      <a href="mailto:xrezzkystore.idn@gmail.com" class="gmail-btn"><div class="gmail-icon"><svg width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 24L4 10h40z"/><path fill="#FBBC04" d="M4 10v28l10-14z"/><path fill="#34A853" d="M44 10v28L34 24z"/><path fill="#4285F4" d="M4 38h40L24 24z"/><path fill="#C5221F" d="M4 10l20 14 20-14z" opacity=".3"/></svg></div><div class="gmail-info"><div class="gl">Gmail Admin</div><div class="ge">xrezzkystore.idn@gmail.com</div></div></a>
     </div>
   </div>
-  <div class="section-block" id="services-section" style="display:none">
-    <div class="card"><div class="card-title"><div class="card-dot"></div> Layanan</div><div id="services-grid"></div></div>
-  </div>
-  <div class="section-block" id="branches-section" style="display:none">
-    <div class="sec-label">Cabang Kami</div>
-    <div id="branches-grid" class="branches-grid"></div>
-  </div>
-</div>
 
-<div class="page" id="page-faq">
-  <div class="page-section"><div class="page-section-title" style="font-size:28px;">FAQ</div><div class="page-section-sub">Pertanyaan yang sering ditanyakan</div></div>
-  <input class="faq-search" id="faq-search" placeholder="Cari pertanyaan..." oninput="renderFaq(window._faqData||[],this.value)">
-  <div id="faq-list"><div class="faq-empty">Belum ada FAQ.</div></div>
+  <footer>
+    <div id="footer-copy" style="display:none"></div>
+    <div id="footer-tagline" style="display:none"></div>
+  </footer>
 </div>
-
-<div class="page" id="page-tentang">
-  <div class="page-section"><div class="page-section-title" style="font-size:28px;">Tentang Kami</div><div class="page-section-sub">Kenali lebih jauh siapa kami</div></div>
-  <div class="card" id="about-section" style="display:none"><div class="card-title"><div class="card-dot"></div> Tentang</div><div class="prose" id="about-content"></div></div>
-  <div class="card"><div class="card-title"><div class="card-dot"></div> Hubungi Admin</div>
-    <p style="font-size:14px;color:var(--muted);margin-bottom:12px">Untuk pertanyaan, laporan, atau kerjasama:</p>
-    <a href="mailto:xrezzkystore.idn@gmail.com" class="gmail-btn" style="background:var(--card2);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;align-items:center;gap:16px;text-decoration:none;color:var(--text);transition:all 0.3s;"><div class="gmail-icon" style="width:48px;height:48px;border-radius:14px;background:rgba(234,67,53,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="24" height="24" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 24L4 10h40z"/><path fill="#FBBC04" d="M4 10v28l10-14z"/><path fill="#34A853" d="M44 10v28L34 24z"/><path fill="#4285F4" d="M4 38h40L24 24z"/><path fill="#C5221F" d="M4 10l20 14 20-14z" opacity=".3"/></svg></div><div class="gmail-info"><div class="gl" style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:2px">Email Admin</div><div class="ge" style="font-size:15px;font-weight:800;color:#ea4335">xrezzkystore.idn@gmail.com</div></div></a>
-  </div>
 </div>
-
-<div class="page" id="page-kebijakan">
-  <div class="page-section"><div class="page-section-title" style="font-size:28px;">Kebijakan & Aturan</div><div class="page-section-sub">Harap baca dan pahami kebijakan kami</div></div>
-  <div class="card" id="policy-section" style="display:none"><div class="card-title"><div class="card-dot"></div> Kebijakan</div><div class="prose" id="policy-content"></div></div>
-</div>
-
-<footer>
-  <div id="footer-copy" style="display:none"></div>
-  <div id="footer-tagline" style="display:none"></div>
-</footer>
 
 <div class="share-toast" id="share-toast"></div>
 
 <a href="#" id="floating-wa" class="floating-wa" target="_blank" rel="noopener" style="display:none" title="Chat WhatsApp">
   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.121 1.524 5.855L.058 23.75a.5.5 0 0 0 .61.638l6.09-1.596A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.87 9.87 0 0 1-5.031-1.378l-.36-.214-3.732.978.995-3.636-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.466 0 9.9 4.434 9.9 9.9 0 5.466-4.434 9.9-9.9 9.9z"/></svg>
+  <span class="floating-wa-ping"></span>
 </a>
 
 <div id="media-modal" onclick="closeMediaModal()">
@@ -595,13 +830,20 @@ function toggleTheme(){
   try{ localStorage.setItem('_theme', next); }catch(e){}
 }
 
+// ── SIDEBAR (mobile off-canvas) ──
+function openSidebar(){ el('sidebar').classList.add('open'); el('sidebar-overlay').classList.add('show'); }
+function closeSidebar(){ el('sidebar').classList.remove('open'); el('sidebar-overlay').classList.remove('show'); }
+
 window._faqData=[];
+window._worksData=[];
 function goPage(name,btn){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
-  document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.sb-item').forEach(function(b){b.classList.remove('active');});
   var pg=document.getElementById('page-'+name);
   if(pg) pg.classList.add('active');
   if(btn) btn.classList.add('active');
+  else { var m=document.querySelector('.sb-item[data-pg="'+name+'"]'); if(m) m.classList.add('active'); }
+  closeSidebar();
   window.scrollTo({top:0,behavior:'smooth'});
   if(name==='faq'){var s=document.getElementById('faq-search');if(s)s.value='';renderFaq(window._faqData||[],'')}
 }
@@ -617,7 +859,7 @@ function renderFaq(items,query){
     html+='<div class="faq-cat">'+cat+'</div>';
     cats[cat].forEach(function(x,i){
       var id='faq_'+cat.replace(/[^a-z0-9]/gi,'_')+'_'+i;
-      var shareText=encodeURIComponent(x.question+'\n'+(x.answer||'').replace(/[*_~`]/g,''));
+      var shareText=encodeURIComponent(x.question+'\n'+(x.answer||'').replace(/[*_~\`]/g,''));
       html+='<div class="faq-item" id="'+id+'">'
         +'<div class="faq-q" onclick="toggleFaq(\''+id+'\')">'
           +'<span class="faq-q-text">'+x.question+'</span>'
@@ -638,6 +880,24 @@ function toggleFaq(id){
   document.querySelectorAll('.faq-item.open').forEach(function(e){e.classList.remove('open');});
   if(!was)el.classList.add('open');
 }
+
+// ── KARYA SAYA / WORKS: tab kategori + grid (baru) ──
+function renderWorks(items, activeCat){
+  var tabsEl=document.getElementById('work-tabs');
+  var gridEl=document.getElementById('works-grid');
+  if(!tabsEl||!gridEl) return;
+  var cats=['Semua'];
+  (items||[]).forEach(function(w){ if(w.category && cats.indexOf(w.category)===-1) cats.push(w.category); });
+  tabsEl.innerHTML=cats.map(function(c){
+    return '<button class="work-tab'+(c===activeCat?' active':'')+'" onclick="renderWorks(window._worksData,\''+c.replace(/'/g,"\\'")+'\')">'+c+'</button>';
+  }).join('');
+  var filtered=(activeCat==='Semua')?(items||[]):(items||[]).filter(function(w){return w.category===activeCat;});
+  gridEl.innerHTML=filtered.map(function(w){
+    var thumb=w.image?'<img class="work-thumb" src="'+w.image+'" alt="'+(w.title||'')+'">':'<div class="work-thumb"></div>';
+    return '<a class="work-card" href="'+(w.url||'#')+'" target="_blank" rel="noopener">'+thumb+'<div class="work-info"><div class="work-title">'+(w.title||'')+'</div><div class="work-cat">'+(w.category||'')+'</div></div></a>';
+  }).join('');
+}
+
 function shareContent(encodedText,type){
   var text=decodeURIComponent(encodedText);
   var url=window.location.href.split('?')[0];
@@ -665,9 +925,9 @@ function closeMediaModal(){
   if(modal)modal.classList.remove('open');if(vid){vid.pause();vid.src='';}
   document.body.style.overflow='';
 }
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMediaModal();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeMediaModal();closeSidebar();}});
 document.addEventListener('contextmenu',function(e){var t=e.target;if(t.id==='profile-avatar'||t.closest&&t.closest('#banner-bg'))e.preventDefault();});
 document.addEventListener('dragstart',function(e){if(e.target.id==='profile-avatar')e.preventDefault();});
 </script>
 </body>
-                                                                                                                                                                                                                                                                                                                                                                                              </html>
+</html>
