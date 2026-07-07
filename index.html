@@ -171,7 +171,7 @@ function applyData(d){
   const wa=d.whatsapp||{};
   const komunitasList=[...(wa.komunitas||[]),...(wa.grup||[]),...(wa.saluran||[])].filter(g=>g.name&&g.url);
   if(komunitasList.length){
-    el('wa-list').innerHTML=komunitasList.map(g=>`<a href="${g.url}" class="wa-item" target="_blank" rel="noopener"><div class="wa-item-icon" style="background:rgba(37,211,102,0.12)"><svg width="18" height="18" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.121 1.524 5.855L.058 23.75a.5.5 0 0 0 .61.638l6.09-1.596A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.87 9.87 0 0 1-5.031-1.378l-.36-.214-3.732.978.995-3.636-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.466 0 9.9 4.434 9.9 9.9 0 5.466-4.434 9.9-9.9 9.9z"/></svg></div><div class="wa-item-info"><span class="wa-item-name">${g.name}</span>${g.desc?`<span class="wa-item-desc">${g.desc}</span>`:''}</div><svg class="social-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>`).join('');
+    el('wa-list').innerHTML=komunitasList.map(g=>`<a href="${g.url}" class="wa-item" target="_blank" rel="noopener"><div class="wa-item-icon" style="background:rgba(59,141,241,0.12)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="wa-item-info"><span class="wa-item-name">${g.name}</span>${g.desc?`<span class="wa-item-desc">${g.desc}</span>`:''}</div><svg class="social-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>`).join('');
     show('wa-section');
   } else hide('wa-section');
 
@@ -304,7 +304,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 /* ── SIDEBAR ── */
 .sidebar{width:min(var(--sidebar-w),82vw);flex-shrink:0;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transform:translateX(0);transition:transform 0.25s ease}
 .sb-top{display:flex;align-items:center;gap:9px;padding:18px 18px 14px}
-.sb-logo-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#60aaff);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:800;font-size:12px;color:#fff;flex-shrink:0;overflow:hidden;white-space:nowrap;letter-spacing:-0.3px}
+.sb-logo-mark{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#60aaff);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:800;font-size:12.5px;color:#fff;flex-shrink:0;overflow:hidden;white-space:nowrap;letter-spacing:-0.4px;text-align:center;line-height:1}
 .sb-logo-text{font-family:var(--font-d);font-weight:800;font-size:15px;letter-spacing:0.3px}
 .sb-logo-sub{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:-2px}
 .sb-nav{flex:1;overflow-y:auto;padding:6px 12px}
@@ -325,7 +325,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .sidebar-overlay.show{display:block}
 
 /* ── MOBILE TOPBAR ── */
-.mtopbar{display:none;position:sticky;top:0;z-index:150;align-items:center;justify-content:space-between;padding:0 14px;height:52px;background:rgba(13,15,20,0.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.mtopbar{display:none;position:sticky;top:0;z-index:150;align-items:center;justify-content:space-between;padding:0 14px;height:52px;background:var(--card);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
 .hamburger{width:36px;height:36px;border-radius:9px;background:var(--card2);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .hamburger svg{width:18px;height:18px}
 .mtopbar .nav-logo{font-size:15px}
@@ -518,7 +518,7 @@ html[data-theme="light"] #profile-name{background:linear-gradient(135deg,#0f172a
 footer{border-top:1px solid var(--border);padding:16px 24px 8px;max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
 #footer-copy,#footer-tagline{font-size:11px;color:var(--muted)}
 .wa-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.wa-logo{width:36px;height:36px;border-radius:10px;background:rgba(37,211,102,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wa-logo{width:36px;height:36px;border-radius:10px;background:rgba(59,141,241,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .wa-title{font-family:var(--font-d);font-size:14px;font-weight:700}
 .wa-subtitle{font-size:11px;color:var(--muted)}
 .wa-group-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:14px 0 8px;display:flex;align-items:center;gap:7px}
@@ -768,7 +768,7 @@ footer{border-top:1px solid var(--border);padding:16px 24px 8px;max-width:980px;
     <div class="section-block" id="wa-section" style="display:none">
       <div class="card">
         <div class="wa-header">
-          <div class="wa-logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.121 1.524 5.855L.058 23.75a.5.5 0 0 0 .61.638l6.09-1.596A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.87 9.87 0 0 1-5.031-1.378l-.36-.214-3.732.978.995-3.636-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.466 0 9.9 4.434 9.9 9.9 0 5.466-4.434 9.9-9.9 9.9z"/></svg></div>
+          <div class="wa-logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
           <div><div class="wa-title">Komunitas</div><div class="wa-subtitle">Gabung komunitas resmi kami di WhatsApp</div></div>
         </div>
         <div id="wa-list"></div>
@@ -954,4 +954,4 @@ window.addEventListener('resize', function(){ closeSidebar(); });
 window.addEventListener('orientationchange', function(){ closeSidebar(); });
 </script>
 </body>
-  </html>
+</html>
