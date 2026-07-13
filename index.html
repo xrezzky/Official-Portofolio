@@ -6,7 +6,6 @@
 <title>XREZZKY — Official Profile</title>
 <meta name="description" content="XREZZKY — Digital Creator & Developer">
 <script>
-// Terapkan tema sebelum render — cegah flash warna salah
 (function(){
   try{
     var t = localStorage.getItem('_theme') || 'light';
@@ -31,8 +30,17 @@ function waFormat(text){
     .replace(/\*([^*\n]+?)\*/g,'<strong>$1</strong>')
     .replace(/_([^_\n]+?)_/g,'<em>$1</em>')
     .replace(/~([^~\n]+?)~/g,'<s>$1</s>')
-    .replace(/`([^`]+?)`/g,'<code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;font-size:0.9em;font-family:monospace">$1</code>')
+    .replace(/`([^`]+?)`/g,'<code style="background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:4px;font-size:0.9em;font-family:monospace">$1</code>')
     .replace(/\n/g,'<br>');
+}
+
+function statusMeta(s){
+  s=(s||'').toLowerCase();
+  if(s==='online')      return {cls:'st-online',  label:'Online'};
+  if(s==='offline')     return {cls:'st-offline', label:'Offline'};
+  if(s==='maintenance') return {cls:'st-maint',    label:'Maintenance'};
+  if(s==='development') return {cls:'st-dev',      label:'Development'};
+  return {cls:'st-online',label:s?s.charAt(0).toUpperCase()+s.slice(1):'Online'};
 }
 
 function applyData(d){
@@ -44,27 +52,35 @@ function applyData(d){
   if(t.bgCard)          document.documentElement.style.setProperty('--card',t.bgCard);
 
   const p=d.profile||{};
-  if(p.name){ const s=p.shortName||p.name.split(' ')[0]; setText('nav-logo',s); setText('profile-name',p.name); show('profile-name'); } else hide('profile-name');
-  if(p.badge){  setText('profile-badge',p.badge);   show('profile-badge'); }   else hide('profile-badge');
+  if(p.name){
+    setText('sb-name',p.name);
+    setText('profile-name',p.name); show('profile-name');
+  } else hide('profile-name');
+  if(p.badge){  setText('profile-badge',p.badge);   show('profile-badge');
+    setText('sb-badge',p.badge); show('sb-badge'); }
+  else { hide('profile-badge'); hide('sb-badge'); }
   if(p.tagline){setText('profile-tagline',p.tagline);show('profile-tagline');} else hide('profile-tagline');
   if(p.bio){    setText('profile-bio',p.bio);        show('profile-bio'); }    else hide('profile-bio');
   if(p.location){setText('chip-location',p.location);show('chip-location-wrap');} else hide('chip-location-wrap');
   if(p.joinYear){setText('chip-join','Bergabung '+p.joinYear);show('chip-join-wrap');} else hide('chip-join-wrap');
-  if(p.avatarUrl){el('profile-avatar').src=p.avatarUrl;el('profile-avatar').style.background='none';}
-  else{el('profile-avatar').removeAttribute('src');el('profile-avatar').style.background='linear-gradient(135deg,var(--accent),var(--accent2))';}
+  if(p.avatarUrl){
+    el('profile-avatar').src=p.avatarUrl;el('profile-avatar').style.background='none';
+    el('sb-avatar').src=p.avatarUrl;el('sb-avatar').style.background='none';
+  } else {
+    el('profile-avatar').removeAttribute('src');el('profile-avatar').style.background='var(--accent)';
+    el('sb-avatar').removeAttribute('src');el('sb-avatar').style.background='var(--accent)';
+  }
   if(p.bannerUrl){const b=el('banner-bg');b.style.backgroundImage='url('+p.bannerUrl+')';b.style.backgroundSize='cover';b.style.backgroundPosition='center';}
 
-  // Verified check di avatar — muncul kalau ada badge (dianggap terverifikasi)
   if(p.badge){ show('avatar-verified-badge'); } else hide('avatar-verified-badge');
 
-  // Status CS online/offline — dari field profile.csStatus (diatur dari admin)
   const csStatus=p.csStatus||'';
   if(csStatus==='online'||csStatus==='offline'){
     const badge=el('hero-status-badge');
     const dot=badge.querySelector('svg');
     const label=badge.querySelector('span');
-    if(csStatus==='online'){ dot.style.color='#4ade80'; label.textContent='CS Online'; }
-    else{ dot.style.color='#94a3b8'; label.textContent='CS Offline'; }
+    if(csStatus==='online'){ dot.style.color='var(--success)'; label.textContent='CS Online'; }
+    else{ dot.style.color='var(--muted)'; label.textContent='CS Offline'; }
     show('hero-status-badge');
   } else hide('hero-status-badge');
 
@@ -74,26 +90,29 @@ function applyData(d){
     show('stats-section');
   } else hide('stats-section');
 
-  const socials=(d.socials||[]).filter(s=>s.visible!==false&&s.label);
+  const isWaEntry=s=>/whatsapp|wa\.me|wa\s?admin/i.test(s.label||'')||/wa\.me|whatsapp/i.test(s.url||'');
+  const socialsAll=(d.socials||[]).filter(s=>s.visible!==false&&s.label);
+  const socials=socialsAll.filter(s=>!isWaEntry(s));
   if(socials.length){
-    el('socials-grid').innerHTML=socials.map(s=>`<a href="${s.url||'#'}" class="social-btn" target="_blank" rel="noopener" style="--lc:${s.color||'#fff'}"><div class="social-icon-wrap">${s.iconUrl?`<img src="${s.iconUrl}" class="social-img" alt="${s.label}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="social-emoji" style="${s.iconUrl?'display:none':''}">${s.emoji||'🔗'}</div></div><div class="social-info"><span class="social-name">${s.label}</span>${s.handle?`<span class="social-handle">${s.handle}</span>`:''}</div><svg class="social-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>`).join('');
+    el('socials-grid').innerHTML=socials.map(s=>`<a href="${s.url||'#'}" class="social-btn" target="_blank" rel="noopener" style="--lc:${s.color||'#111827'}"><div class="social-icon-wrap">${s.iconUrl?`<img src="${s.iconUrl}" class="social-img" alt="${s.label}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="social-emoji" style="${s.iconUrl?'display:none':''}">${s.emoji||'🔗'}</div></div><div class="social-info"><span class="social-name">${s.label}</span>${s.handle?`<span class="social-handle">${s.handle}</span>`:''}</div><svg class="social-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>`).join('');
     show('socials-section');
-  } else hide('socials-section');
+    setText('ct-socials-count',socials.length+' akun');
+    el('sb-socials').innerHTML=socials.slice(0,5).map(s=>`<a href="${s.url||'#'}" target="_blank" rel="noopener" class="sb-social-ic" title="${s.label}">${s.iconUrl?`<img src="${s.iconUrl}" alt="${s.label}" onerror="this.style.display='none';this.nextSibling.style.display='inline'">`:''}<span style="${s.iconUrl?'display:none':''}">${s.emoji||'🔗'}</span></a>`).join('');
+  } else { hide('socials-section'); el('sb-socials').innerHTML=''; }
 
-  // ── HERO CTA: cari link WhatsApp dari socials untuk tombol Chat WA ──
-  const waSocial=socials.find(s=>/whatsapp|wa\.me|wa\s?admin/i.test(s.label||'')||/wa\.me|whatsapp/i.test(s.url||''));
-  if(waSocial&&waSocial.url){
+  const waSocial=socialsAll.find(isWaEntry);
+  window._waUrl = (waSocial&&waSocial.url) ? waSocial.url : '';
+  if(window._waUrl){
     const waBtn=el('hero-cta-wa');
-    waBtn.href=waSocial.url;
+    waBtn.href=window._waUrl;
     waBtn.style.display='inline-flex';
     const floatWa=el('floating-wa');
-    floatWa.href=waSocial.url;
-    floatWa.style.display='flex';
+    floatWa.href=window._waUrl;
   } else {
     el('hero-cta-wa').style.display='none';
-    el('floating-wa').style.display='none';
   }
-  if(waSocial || (p.name)) show('hero-cta-row'); else hide('hero-cta-row');
+  if(window._waUrl || (p.name)) show('hero-cta-row'); else hide('hero-cta-row');
+  updateFloatingWa();
 
   const weblinks=(d.weblinks||[]).filter(w=>w.visible!==false&&w.label);
   if(weblinks.length){
@@ -105,9 +124,9 @@ function applyData(d){
   if(svcs.length){
     el('services-grid').innerHTML=svcs.map(s=>`<div class="service-card">${s.icon?`<div class="service-icon">${s.icon}</div>`:''}<div><div class="service-title">${s.title}</div>${s.desc?`<div class="service-desc">${s.desc}</div>`:''}</div></div>`).join('');
     show('services-section');
+    setText('ct-services-count',svcs.length+' layanan');
   } else hide('services-section');
 
-  // ── CABANG KAMI ──
   const branches=(d.branches||[]).filter(b=>b.name);
   if(branches.length){
     el('branches-grid').innerHTML=branches.map(b=>{
@@ -131,7 +150,7 @@ function applyData(d){
 
   const anns=(d.announcements||[]).filter(a=>a.text);
   if(anns.length){
-    el('ann-list').innerHTML=anns.map((a,i)=>`<div class="ann-item"><div class="ann-main"><div class="ann-header">${a.tag?`<span class="ann-tag" style="background:${a.color||'#3b8df1'}22;color:${a.color||'#3b8df1'};border-color:${a.color||'#3b8df1'}44">${a.tag}</span>`:''}<button class="share-btn" onclick="shareContent('${encodeURIComponent((a.tag?'['+a.tag+'] ':'')+a.text.replace(/[*_~`]/g,''))}','ann')" title="Bagikan"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>${a.time?`<span class="ann-time">${a.time}</span>`:''}</div><span class="ann-text">${waFormat(a.text)}</span>${a.mediaUrl?`<div class="ann-media-wrap" onclick="openMediaModal('${a.mediaUrl}','${a.mediaType||'image'}')"><div class="ann-media-protect">${a.mediaType==='video'?`<video src="${a.mediaUrl}" class="ann-media" playsinline preload="metadata"></video>`:`<img src="${a.mediaUrl}" class="ann-media" alt="media" draggable="false">`}<div class="ann-media-overlay"><span>Ketuk untuk perbesar</span></div></div></div>`:''}</div></div>`).join('');
+    el('ann-list').innerHTML=anns.map((a,i)=>`<div class="ann-item"><div class="ann-main"><div class="ann-header">${a.tag?`<span class="ann-tag">${a.tag}</span>`:''}<button class="share-btn" onclick="shareContent('${encodeURIComponent((a.tag?'['+a.tag+'] ':'')+a.text.replace(/[*_~\`]/g,''))}','ann')" title="Bagikan"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>${a.time?`<span class="ann-time">${a.time}</span>`:''}</div><span class="ann-text">${waFormat(a.text)}</span>${a.mediaUrl?`<div class="ann-media-wrap" onclick="openMediaModal('${a.mediaUrl}','${a.mediaType||'image'}')"><div class="ann-media-protect">${a.mediaType==='video'?`<video src="${a.mediaUrl}" class="ann-media" playsinline preload="metadata"></video>`:`<img src="${a.mediaUrl}" class="ann-media" alt="media" draggable="false">`}<div class="ann-media-overlay"><span>Ketuk untuk perbesar</span></div></div></div>`:''}</div></div>`).join('');
     show('ann-section');
   } else hide('ann-section');
 
@@ -141,14 +160,33 @@ function applyData(d){
   if(policy.content){el('policy-content').innerHTML=waFormat(policy.content);show('policy-section');} else hide('policy-section');
 
   const wa=d.whatsapp||{};
-  const waGrup=(wa.grup||[]).filter(g=>g.name&&g.url);
-  if(waGrup.length){el('wa-grup-list').innerHTML=waGrup.map(g=>`<a href="${g.url}" class="wa-item" target="_blank" rel="noopener"><div class="wa-item-icon" style="background:rgba(37,211,102,0.12)"><svg width="18" height="18" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.121 1.524 5.855L.058 23.75a.5.5 0 0 0 .61.638l6.09-1.596A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.87 9.87 0 0 1-5.031-1.378l-.36-.214-3.732.978.995-3.636-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.466 0 9.9 4.434 9.9 9.9 0 5.466-4.434 9.9-9.9 9.9z"/></svg></div><div class="wa-item-info"><span class="wa-item-name">${g.name}</span>${g.desc?`<span class="wa-item-desc">${g.desc}</span>`:''}</div><div class="wa-item-badge" style="background:rgba(37,211,102,0.1);border-color:rgba(37,211,102,0.25);color:#86efac">Grup</div><svg class="social-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>`).join('');show('wa-grup-wrap');} else hide('wa-grup-wrap');
-  const waKom=(wa.komunitas||[]).filter(g=>g.name&&g.url);
-  if(waKom.length){el('wa-komunitas-list').innerHTML=waKom.map(g=>`<a href="${g.url}" class="wa-item" target="_blank" rel="noopener"><div class="wa-item-icon" style="background:rgba(37,211,102,0.12)"><svg width="18" height="18" viewBox="0 0 24 24" fill="#25D366"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg></div><div class="wa-item-info"><span class="wa-item-name">${g.name}</span>${g.desc?`<span class="wa-item-desc">${g.desc}</span>`:''}</div><div class="wa-item-badge" style="background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.25);color:#93c5fd">Komunitas</div><svg class="social-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>`).join('');show('wa-komunitas-wrap');} else hide('wa-komunitas-wrap');
-  const waSal=(wa.saluran||[]).filter(g=>g.name&&g.url);
-  if(waSal.length){el('wa-saluran-list').innerHTML=waSal.map(g=>`<a href="${g.url}" class="wa-item" target="_blank" rel="noopener"><div class="wa-item-icon" style="background:rgba(124,58,237,0.12)"><svg width="18" height="18" viewBox="0 0 24 24" fill="#a78bfa"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></div><div class="wa-item-info"><span class="wa-item-name">${g.name}</span>${g.desc?`<span class="wa-item-desc">${g.desc}</span>`:''}</div><div class="wa-item-badge" style="background:rgba(124,58,237,0.1);border-color:rgba(124,58,237,0.25);color:#c4b5fd">Saluran</div><svg class="social-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>`).join('');show('wa-saluran-wrap');} else hide('wa-saluran-wrap');
-  const hasWa=waGrup.length||waKom.length||waSal.length;
-  if(hasWa)show('wa-section');else hide('wa-section');
+  const komunitasList=[...(wa.komunitas||[]),...(wa.grup||[]),...(wa.saluran||[])].filter(g=>g.name&&g.url);
+  if(komunitasList.length){
+    el('wa-list').innerHTML=komunitasList.map(g=>`<a href="${g.url}" class="wa-item" target="_blank" rel="noopener"><div class="wa-item-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="wa-item-info"><span class="wa-item-name">${g.name}</span>${g.desc?`<span class="wa-item-desc">${g.desc}</span>`:''}</div><svg class="social-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></a>`).join('');
+    show('wa-section');
+    setText('ct-wa-count',komunitasList.length+' link');
+  } else hide('wa-section');
+
+  const statusList=(d.statusLayanan||[]).filter(s=>s.name);
+  if(statusList.length){
+    el('status-list').innerHTML=statusList.map(s=>{const m=statusMeta(s.status);return `<div class="status-row"><div class="status-row-info"><span class="status-row-name">${s.name}</span>${s.desc?`<span class="status-row-desc">${s.desc}</span>`:''}</div><span class="status-pill ${m.cls}">${m.label}</span></div>`;}).join('');
+    show('status-section');
+  } else hide('status-section');
+
+  const monitorList=(d.systemMonitor||[]).filter(s=>s.name);
+  if(monitorList.length){
+    el('monitor-list').innerHTML=monitorList.map(s=>{const m=statusMeta(s.status);return `<div class="status-row"><div class="status-row-info"><span class="status-row-name">${s.name}</span></div><span class="status-pill ${m.cls}">${m.label}</span></div>`;}).join('');
+    show('monitor-section');
+  } else hide('monitor-section');
+
+  window._worksData=Array.isArray(d.works)?d.works:[];
+  if(window._worksData.length){ renderWorks(window._worksData,'Semua'); show('works-section'); } else hide('works-section');
+
+  const updates=(d.updates||[]).filter(u=>u.title);
+  if(updates.length){
+    el('updates-list').innerHTML=updates.map(u=>`<div class="update-row"><span class="update-dot"></span><div class="update-info">${u.date?`<span class="update-date">${u.date}</span>`:''}<span class="update-title">${u.title}</span></div>${u.tag?`<span class="update-tag">${u.tag}</span>`:''}</div>`).join('');
+    show('updates-section');
+  } else hide('updates-section');
 
   window._faqData=Array.isArray(d.faq)?d.faq:[];
   renderFaq(window._faqData,'');
@@ -156,14 +194,11 @@ function applyData(d){
   const f=d.footer||{};
   if(f.copy){setText('footer-copy',f.copy);show('footer-copy');}else hide('footer-copy');
   if(f.tagline){setText('footer-tagline',f.tagline);show('footer-tagline');}else hide('footer-tagline');
+  if(f.version) setText('footer-version-num',f.version);
 }
 
-// ── API BASE ──────────────────────────────────────────────────────────
-// Ganti ke URL Vercel deployment kamu kalau beda domain dengan web ini.
-// Kalau API di-deploy di domain yang sama (xrezzkybeta.my.id), biarkan kosong.
 const API_BASE = '';
 
-// ── AMBIL SITEDATA VIA VERCEL API (bukan langsung ke Firebase) ────────
 async function fetchSiteData(){
   try{
     const res = await fetch(API_BASE + '/api/sitedata');
@@ -175,16 +210,10 @@ async function fetchSiteData(){
   }
 }
 fetchSiteData();
-// Polling ringan tiap 20 detik untuk simulasi "realtime" tanpa perlu
-// koneksi websocket langsung ke Firebase dari browser
 setInterval(fetchSiteData, 20000);
 
-// ── VISITOR COUNTER — server-side via Vercel API ───────────────────────
-// Semua logika anti-spam (rate limit, fingerprint IP, quota harian)
-// sekarang berjalan di server (/api/visitor.js), bukan di localStorage
-// client yang gampang dihapus/dimanipulasi.
 (function(){
-  var PING_INTERVAL_MS = 30000; // ping tiap 30 detik supaya status online tetap aktif
+  var PING_INTERVAL_MS = 30000;
 
   function pingVisitor(){
     fetch(API_BASE + '/api/visitor', { method:'POST' })
@@ -208,16 +237,11 @@ setInterval(fetchSiteData, 20000);
       .catch(function(){});
   }
 
-  // Ping pertama kali saat load
   pingVisitor();
   refreshCounts();
-
-  // Ping berkala biar online counter tetap hidup
   setInterval(pingVisitor, PING_INTERVAL_MS);
   setInterval(refreshCounts, 15000);
 
-  // Saat tab ditutup — beri tahu server segera pakai sendBeacon
-  // (lebih reliable daripada fetch biasa saat halaman unload)
   function leaveNow(){
     if(navigator.sendBeacon){
       navigator.sendBeacon(API_BASE + '/api/visitor-leave');
@@ -234,11 +258,8 @@ setInterval(fetchSiteData, 20000);
   --card2:#F9FAFC;--border:#111827;--text:#111827;
   --muted:#6B7280;--success:#22C55E;--warning:#F59E0B;--danger:#EF4444;
   --font-d:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;--r:16px;
-  --shadow-sm:3px 3px 0 var(--border);--shadow-md:5px 5px 0 var(--border);--shadow-lg:7px 7px 0 var(--border);
-}
-html[data-theme="light"]{
-  --bg:#F5F7FB;--card:#FFFFFF;--card2:#F9FAFC;
-  --border:#111827;--text:#111827;--muted:#6B7280;
+  --sidebar-w:248px;
+  --shadow-sm:3px 3px 0 var(--border);--shadow-md:5px 5px 0 var(--border);--shadow-lg:6px 6px 0 var(--border);
 }
 html[data-theme="dark"]{
   --bg:#101216;--card:#181B22;--card2:#1E222B;
@@ -247,41 +268,64 @@ html[data-theme="dark"]{
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden;transition:background 0.2s ease,color 0.2s ease}
-.card,.hero,.hero-body,.stat-card,.social-btn,.weblink-btn,.wa-item,.ann-item,.faq-item,.visitor-card,.gmail-btn,.nav{transition:background 0.2s ease,border-color 0.2s ease,color 0.2s ease,box-shadow 0.15s ease,transform 0.15s ease}
-html[data-theme="light"] .stat-value,html[data-theme="dark"] .stat-value{background:none;-webkit-text-fill-color:var(--text);color:var(--text)}
-html[data-theme="light"] .visitor-num,html[data-theme="dark"] .visitor-num{background:none;-webkit-text-fill-color:var(--text);color:var(--text)}
-body::before{display:none}
-.accent-glow,.accent-glow2{display:none}
+.card,.hero,.hero-body,.stat-card,.social-btn,.weblink-btn,.wa-item,.ann-item,.faq-item,.visitor-card,.gmail-btn,.sidebar{transition:background 0.2s ease,border-color 0.2s ease,color 0.2s ease,box-shadow 0.15s ease,transform 0.15s ease}
 
-/* ── NAV ── */
-.nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:64px;background:var(--card);border-bottom:2px solid var(--border)}
-.nav-logo{font-family:var(--font-d);font-weight:800;font-size:19px;color:var(--text);min-width:10px;letter-spacing:-0.3px}
-.nav-tabs{display:flex;gap:6px}
-.nav-tab{padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;border:2px solid transparent;background:none;transition:all 0.15s;font-family:var(--font-b)}
-.nav-tab:hover{color:var(--text);background:var(--card2)}
-.nav-tab.active{background:var(--accent);color:#fff;border-color:var(--border);box-shadow:2px 2px 0 var(--border)}
+.app{display:flex;min-height:100vh;min-height:100dvh;max-width:100vw;overflow-x:hidden}
+
+.sidebar{width:min(var(--sidebar-w),82vw);flex-shrink:0;background:var(--card);border-right:2px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transform:translateX(0);transition:transform 0.25s ease}
+.sb-top{display:flex;align-items:center;gap:10px;padding:20px 18px 16px}
+.sb-logo-mark{width:38px;height:38px;border-radius:10px;background:var(--accent);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:800;font-size:12px;color:#fff;flex-shrink:0;overflow:hidden;white-space:nowrap;letter-spacing:-0.4px;text-align:center;line-height:1;box-shadow:2px 2px 0 var(--border)}
+.sb-logo-text{font-family:var(--font-d);font-weight:800;font-size:15px;letter-spacing:0.2px;color:var(--text)}
+.sb-logo-sub{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:-2px;font-weight:700}
+.sb-nav{flex:1;overflow-y:auto;padding:8px 14px}
+.sb-item{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:11px;color:var(--muted);text-decoration:none;font-size:13.5px;font-weight:700;cursor:pointer;border:2px solid transparent;background:none;width:100%;text-align:left;font-family:var(--font-b);margin-bottom:4px}
+.sb-item svg{width:17px;height:17px;flex-shrink:0}
+.sb-item:hover{background:var(--card2);color:var(--text)}
+.sb-item.active{background:var(--accent);color:#fff;border-color:var(--border);box-shadow:2px 2px 0 var(--border)}
+.sb-profile{margin:12px 14px 18px;padding:16px 14px;border-radius:14px;background:var(--card2);border:2px solid var(--border);text-align:center;box-shadow:var(--shadow-sm)}
+.sb-avatar-wrap{position:relative;width:54px;height:54px;margin:0 auto 10px}
+#sb-avatar{width:54px;height:54px;border-radius:13px;object-fit:cover;display:block;background:var(--accent);border:2px solid var(--border)}
+#sb-name{font-family:var(--font-d);font-size:13px;font-weight:700;line-height:1.3;color:var(--text)}
+#sb-badge{display:inline-block;margin-top:7px;padding:3px 10px;border-radius:8px;font-size:10px;font-weight:800;background:#EFF6FF;color:var(--accent2);border:2px solid var(--border)}
+html[data-theme="dark"] #sb-badge{background:var(--card)}
+.sb-tagline{font-size:10.5px;color:var(--muted);margin-top:4px;font-weight:600}
+#sb-socials{display:flex;justify-content:center;gap:7px;margin-top:12px;flex-wrap:wrap}
+.sb-social-ic{width:28px;height:28px;border-radius:8px;background:var(--card);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;text-decoration:none;overflow:hidden;transition:all 0.15s}
+.sb-social-ic:hover{transform:translate(-1px,-1px);box-shadow:2px 2px 0 var(--border)}
+.sb-social-ic img{width:14px;height:14px;object-fit:contain}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(17,24,39,0.5);z-index:190}
+.sidebar-overlay.show{display:block}
+
+.mtopbar{display:none;position:sticky;top:0;z-index:150;align-items:center;justify-content:space-between;padding:0 14px;height:56px;background:var(--card);border-bottom:2px solid var(--border)}
+.hamburger{width:38px;height:38px;border-radius:10px;background:var(--card2);border:2px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:2px 2px 0 var(--border);transition:all 0.15s}
+.hamburger:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--border)}
+.hamburger svg{width:18px;height:18px}
+.mtopbar .nav-logo{font-size:15px}
+
+.main-wrap{flex:1;min-width:0;margin-left:var(--sidebar-w);display:flex;flex-direction:column}
+.topbar-actions{display:flex;align-items:center;gap:10px;padding:0 28px;height:64px;justify-content:flex-end;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:90;background:var(--bg)}
+.nav-logo{font-family:var(--font-d);font-weight:800;font-size:17px;color:var(--text);min-width:10px}
 .nav-contact{display:flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;background:var(--card);border:2px solid var(--border);color:var(--text);text-decoration:none;font-size:13px;font-weight:700;transition:all 0.15s;white-space:nowrap;box-shadow:2px 2px 0 var(--border)}
 .nav-contact:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--border)}
 .theme-toggle{width:38px;height:38px;border-radius:10px;background:var(--card);border:2px solid var(--border);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;box-shadow:2px 2px 0 var(--border)}
 .theme-toggle:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--border)}
-.theme-toggle svg{width:17px;height:17px}
+.theme-toggle svg{width:16px;height:16px}
 .theme-toggle .icon-sun{display:none}
 html[data-theme="dark"] .theme-toggle .icon-moon{display:none}
 html[data-theme="dark"] .theme-toggle .icon-sun{display:block}
-.nav-right{display:flex;align-items:center;gap:10px}
-.page{display:none;max-width:900px;margin:0 auto;padding:24px 18px 40px;width:100%}
+.page{display:none;max-width:980px;margin:0 auto;padding:24px 24px 50px;width:100%}
 .page.active{display:block}
+.accent-glow,.accent-glow2{display:none}
 
-/* ── HERO NEOBRUTALISM ── */
-.hero{position:relative;border-radius:20px;overflow:hidden;border:2px solid var(--border);margin-bottom:22px;box-shadow:var(--shadow-lg);background:var(--card)}
-#banner-bg{height:220px;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);position:relative;background-size:cover;background-position:center;border-bottom:2px solid var(--border)}
+.hero{position:relative;border-radius:20px;overflow:hidden;border:2px solid var(--border);margin-bottom:16px;box-shadow:var(--shadow-lg);background:var(--card)}
+#banner-bg{height:220px;background:var(--accent);position:relative;background-size:cover;background-position:center;border-bottom:2px solid var(--border)}
 #banner-bg::after{display:none}
 #banner-bg::before{display:none}
 .hero-shine{display:none}
 .hero-badge-float{position:absolute;top:16px;right:16px;z-index:3;display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;background:#fff;border:2px solid var(--border);font-size:11px;font-weight:800;color:var(--text);box-shadow:2px 2px 0 var(--border)}
 .hero-badge-float svg{width:10px;height:10px;color:var(--success)}
-.hero-body{background:var(--card);padding:0 28px 30px;position:relative}
-.profile-row{display:flex;align-items:flex-end;gap:18px;margin-top:-46px;position:relative;z-index:3}
+.hero-body{background:var(--card);padding:0 26px 28px;position:relative}
+.profile-row{display:flex;align-items:flex-end;gap:18px;margin-top:-48px;position:relative;z-index:3}
 .avatar-wrap{position:relative;flex-shrink:0}
 #profile-avatar{width:96px;height:96px;border-radius:20px;border:3px solid var(--border);object-fit:cover;display:block;background:var(--accent);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;pointer-events:none;box-shadow:4px 4px 0 var(--border)}
 .avatar-ring{display:none}
@@ -289,8 +333,8 @@ html[data-theme="dark"] .theme-toggle .icon-sun{display:block}
 .avatar-verified svg{width:12px;height:12px;color:#fff}
 .profile-meta{padding-bottom:2px;flex:1;min-width:0}
 .profile-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:800;background:#EFF6FF;border:2px solid var(--border);color:var(--accent2);margin-bottom:10px;letter-spacing:0.1px}
-#profile-name{font-family:var(--font-d);font-size:26px;font-weight:800;letter-spacing:-0.6px;line-height:1.15;color:var(--text);background:none;-webkit-text-fill-color:var(--text)}
-html[data-theme="light"] #profile-name,html[data-theme="dark"] #profile-name{background:none;-webkit-text-fill-color:var(--text)}
+html[data-theme="dark"] .profile-badge{background:var(--card2)}
+#profile-name{font-family:var(--font-d);font-size:26px;font-weight:800;letter-spacing:-0.6px;line-height:1.15;color:var(--text)}
 #profile-tagline{font-size:13.5px;color:var(--muted);margin-top:4px;font-weight:600}
 .profile-info-row{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap}
 .profile-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:700}
@@ -306,17 +350,27 @@ html[data-theme="dark"] .hero-cta.secondary{background:var(--card2)}
 
 .sec-label{font-family:var(--font-d);font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
 #stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.stat-card{background:var(--card2);border:2px solid var(--border);border-radius:14px;padding:16px 10px;text-align:center;transition:all 0.15s;cursor:default;position:relative;overflow:hidden;box-shadow:3px 3px 0 var(--border)}
+.stat-card{background:var(--card2);border:2px solid var(--border);border-radius:14px;padding:16px 10px;text-align:center;transition:all 0.15s;cursor:default;position:relative;overflow:hidden;box-shadow:var(--shadow-sm)}
 .stat-card::before{display:none}
 .stat-card:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--border)}
-.stat-icon{font-size:19px;display:block;margin-bottom:6px}
+.stat-icon{font-size:19px;display:flex;align-items:center;justify-content:center;width:36px;height:36px;margin:0 auto 8px;border-radius:10px;background:#EFF6FF;border:2px solid var(--border)}
+html[data-theme="dark"] .stat-icon{background:var(--card)}
 .stat-value{display:block;font-family:var(--font-d);font-size:20px;font-weight:800;color:var(--text)}
 .stat-label{font-size:10.5px;color:var(--muted);margin-top:2px;display:block;font-weight:700;letter-spacing:0.1px}
-
-.card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:20px;position:relative;overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow-md)}
+.card{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:18px;position:relative;overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow-md)}
 .card::before{display:none}
-.card-title{font-family:var(--font-d);font-size:14px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px;color:var(--text)}
-.card-dot{width:8px;height:8px;border-radius:2px;background:var(--accent);box-shadow:none}
+.card-title{font-family:var(--font-d);font-size:14px;font-weight:800;margin-bottom:13px;display:flex;align-items:center;gap:8px;color:var(--text)}
+.ct-toggle{cursor:pointer;user-select:none;-webkit-user-select:none;margin-bottom:0}
+.ct-count{font-size:10.5px;font-weight:700;color:var(--muted);background:var(--card2);border:2px solid var(--border);padding:2px 9px;border-radius:20px;margin-left:auto}
+.ct-chevron{width:15px;height:15px;flex-shrink:0;transition:transform 0.2s;color:var(--muted)}
+.ct-chevron.closed{transform:rotate(-90deg)}
+.collapsible-body{margin-top:13px}
+.wa-header.ct-toggle{margin-bottom:0}
+.card-title .cv-link{margin-left:auto;font-size:11px;font-weight:700;color:var(--accent);text-decoration:none;font-family:var(--font-b)}
+.card-dot{width:8px;height:8px;border-radius:2px;background:var(--accent)}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:899px){.grid-2{grid-template-columns:1fr}}
 
 #socials-grid{display:flex;flex-direction:column;gap:9px}
 .social-btn{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--card2);border:2px solid var(--border);color:var(--text);text-decoration:none;transition:all 0.15s;position:relative;overflow:hidden}
@@ -328,10 +382,9 @@ html[data-theme="dark"] .social-icon-wrap{background:var(--card)}
 .social-emoji{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:17px}
 .social-info{flex:1;min-width:0}
 .social-name{display:block;font-size:13px;font-weight:700;line-height:1.2;color:var(--text)}
-.social-handle{display:block;font-size:11px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.social-handle{display:block;font-size:12px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .social-arrow{width:13px;height:13px;opacity:0.4;flex-shrink:0;transition:all 0.15s}
 .social-btn:hover .social-arrow{opacity:1;transform:translate(2px,-2px)}
-
 #weblinks-grid{display:flex;flex-direction:column;gap:9px}
 .weblink-btn{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--card2);border:2px solid var(--border);color:var(--text);text-decoration:none;transition:all 0.15s;position:relative;overflow:hidden}
 .weblink-btn::before{display:none}
@@ -340,17 +393,29 @@ html[data-theme="dark"] .social-icon-wrap{background:var(--card)}
 html[data-theme="dark"] .weblink-icon{background:var(--card2)}
 .weblink-info{flex:1;min-width:0}
 .weblink-name{display:block;font-size:13px;font-weight:700;line-height:1.2;color:var(--text)}
-.weblink-desc{display:block;font-size:11px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
-
+.weblink-desc{display:block;font-size:12px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 #services-grid{display:flex;flex-direction:column;gap:10px}
 .service-card{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--card2);border:2px solid var(--border);transition:all 0.15s}
 .service-card:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--border)}
 .service-icon{width:38px;height:38px;border-radius:10px;background:#EFF6FF;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
 html[data-theme="dark"] .service-icon{background:var(--card2)}
 .service-title{font-size:12.5px;font-weight:700;color:var(--text)}
-.service-desc{font-size:11px;color:var(--muted);margin-top:1px;font-weight:600}
+.service-desc{font-size:12px;color:var(--muted);margin-top:1px;font-weight:600}
 
-/* ── CABANG KAMI ── */
+.status-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border-radius:11px;background:var(--card2);border:2px solid var(--border);margin-bottom:8px}
+.status-row-info{display:flex;flex-direction:column;min-width:0}
+.status-row-name{font-size:12.5px;font-weight:700;color:var(--text)}
+.status-row-desc{font-size:11.5px;color:var(--muted);margin-top:1px;font-weight:600}
+.status-pill{flex-shrink:0;padding:4px 11px;border-radius:8px;font-size:10.5px;font-weight:800;letter-spacing:0.2px;border:2px solid var(--border)}
+.status-pill.st-online{background:#DCFCE7;color:#15803D}
+.status-pill.st-offline{background:#FEE2E2;color:#B91C1C}
+.status-pill.st-maint{background:#FEF3C7;color:#B45309}
+.status-pill.st-dev{background:#EDE9FE;color:#6D28D9}
+html[data-theme="dark"] .status-pill.st-online{background:rgba(34,197,94,0.15);color:#4ADE80}
+html[data-theme="dark"] .status-pill.st-offline{background:rgba(239,68,68,0.15);color:#F87171}
+html[data-theme="dark"] .status-pill.st-maint{background:rgba(245,158,11,0.15);color:#FBBF24}
+html[data-theme="dark"] .status-pill.st-dev{background:rgba(139,92,246,0.15);color:#C4B5FD}
+
 .branches-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .branch-card{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:18px;transition:all 0.15s;position:relative;overflow:hidden;box-shadow:var(--shadow-sm)}
 .branch-card::before{display:none}
@@ -361,7 +426,7 @@ html[data-theme="dark"] .service-icon{background:var(--card2)}
 .branch-logo-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font-family:var(--font-d);font-weight:800;font-size:18px}
 .branch-head-info{flex:1;min-width:0}
 .branch-name{font-family:var(--font-d);font-size:14.5px;font-weight:800;line-height:1.2;color:var(--text)}
-.branch-tagline{font-size:11px;color:var(--muted);margin-top:1px;font-weight:600}
+.branch-tagline{font-size:11.5px;color:var(--muted);margin-top:1px;font-weight:600}
 .branch-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;font-weight:500}
 .branch-socials{display:flex;gap:8px;flex-wrap:wrap}
 .branch-social-btn{width:34px;height:34px;border-radius:9px;background:var(--card2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:all 0.15s;overflow:hidden}
@@ -370,13 +435,13 @@ html[data-theme="dark"] .service-icon{background:var(--card2)}
 .branch-emoji{font-size:14px}
 @media(max-width:599px){.branches-grid{grid-template-columns:1fr}}
 
-/* ── ANNOUNCEMENTS ── */
 #ann-list{display:flex;flex-direction:column;gap:14px}
 .ann-item{background:var(--card2);border:2px solid var(--border);border-radius:14px;overflow:hidden;transition:all 0.15s;box-shadow:var(--shadow-sm)}
 .ann-item:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--border)}
 .ann-main{padding:14px 16px}
 .ann-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.ann-tag{flex-shrink:0;padding:3px 10px;border-radius:7px;font-size:10px;font-weight:800;letter-spacing:0.3px;border:2px solid var(--border)}
+.ann-tag{flex-shrink:0;padding:3px 10px;border-radius:7px;font-size:10px;font-weight:800;letter-spacing:0.3px;border:2px solid var(--border);text-transform:uppercase;background:#EFF6FF;color:var(--accent2)}
+html[data-theme="dark"] .ann-tag{background:var(--card)}
 .ann-text{display:block;font-size:13px;color:var(--text);line-height:1.65;font-weight:500}
 .ann-time{font-size:10.5px;color:var(--muted);margin-left:auto;font-weight:700}
 .ann-media-wrap{margin-top:12px;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;border:2px solid var(--border)}
@@ -386,7 +451,6 @@ html[data-theme="dark"] .service-icon{background:var(--card2)}
 .ann-media-overlay span{font-size:11px;color:rgba(255,255,255,0);background:rgba(17,24,39,0);padding:5px 12px;border-radius:20px;transition:all 0.2s;font-weight:700}
 .ann-media-wrap:hover .ann-media-overlay{background:rgba(17,24,39,0.35)}
 .ann-media-wrap:hover .ann-media-overlay span{color:#fff;background:rgba(17,24,39,0.6)}
-
 #media-modal{display:none;position:fixed;inset:0;z-index:9000;background:rgba(17,24,39,0.85);align-items:center;justify-content:center;padding:16px}
 #media-modal.open{display:flex}
 #media-modal-inner{position:relative;max-width:100%;max-height:100%;display:flex;align-items:center;justify-content:center}
@@ -395,7 +459,6 @@ html[data-theme="dark"] .service-icon{background:var(--card2)}
 #modal-close{position:fixed;top:16px;right:16px;width:42px;height:42px;border-radius:12px;background:#fff;border:2px solid var(--border);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;z-index:9001;box-shadow:3px 3px 0 rgba(0,0,0,0.3)}
 #modal-close:hover{transform:translate(-1px,-1px)}
 
-/* ── FLOATING WHATSAPP BUTTON ── */
 .floating-wa{position:fixed;bottom:22px;right:20px;width:58px;height:58px;border-radius:16px;background:var(--success);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:4px 4px 0 var(--border);z-index:500;transition:all 0.15s;overflow:visible}
 .floating-wa:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--border)}
 .floating-wa svg{width:28px;height:28px;color:#fff;position:relative;z-index:2}
@@ -407,48 +470,42 @@ html[data-theme="dark"] .service-icon{background:var(--card2)}
 .prose em{font-style:italic}
 .prose s{text-decoration:line-through;opacity:0.6}
 .prose p{margin-bottom:14px}
-.section-block{margin-bottom:20px}
-
-.visitor-bar{display:flex;gap:12px;margin-bottom:20px}
+.section-block{margin-bottom:14px}
+.visitor-bar{display:flex;gap:10px;margin-bottom:14px}
 .visitor-card{flex:1;background:var(--card);border:2px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-sm)}
 .visitor-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
-.visitor-dot.green{background:var(--success);box-shadow:none;animation:none}
-.visitor-dot.blue{background:var(--accent);box-shadow:none}
+.visitor-dot.green{background:var(--success)}
+.visitor-dot.blue{background:var(--accent)}
 .visitor-info{flex:1}
 .visitor-num{font-family:var(--font-d);font-size:19px;font-weight:800;display:block;color:var(--text)}
 .visitor-label{font-size:10.5px;color:var(--muted);display:block;margin-top:1px;font-weight:700}
-
 .page-section{margin-bottom:22px}
 .page-section-title{font-family:var(--font-d);font-size:22px;font-weight:800;margin-bottom:6px;color:var(--text)}
 .page-section-sub{font-size:12.5px;color:var(--muted);margin-bottom:20px;font-weight:600}
-
 .gmail-btn{display:flex;align-items:center;gap:12px;padding:15px 16px;border-radius:14px;background:#FEF2F2;border:2px solid var(--border);text-decoration:none;color:var(--text);transition:all 0.15s;margin-top:16px;box-shadow:var(--shadow-sm)}
 html[data-theme="dark"] .gmail-btn{background:var(--card2)}
 .gmail-btn:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--border)}
 .gmail-icon{width:42px;height:42px;border-radius:11px;background:#fff;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .gmail-info .gl{font-size:12px;font-weight:700;margin-bottom:2px;color:var(--text)}
 .gmail-info .ge{font-size:13px;font-weight:800;color:var(--danger)}
-
-footer{border-top:2px solid var(--border);padding:20px 18px 10px;max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+footer{border-top:2px solid var(--border);padding:20px 24px 10px;max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
 #footer-copy,#footer-tagline{font-size:11.5px;color:var(--muted);font-weight:600}
-
 .wa-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .wa-logo{width:40px;height:40px;border-radius:11px;background:#DCFCE7;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 html[data-theme="dark"] .wa-logo{background:var(--card2)}
 .wa-title{font-family:var(--font-d);font-size:14.5px;font-weight:800;color:var(--text)}
-.wa-subtitle{font-size:11px;color:var(--muted);font-weight:600}
+.wa-subtitle{font-size:11.5px;color:var(--muted);font-weight:600}
 .wa-group-label{font-size:10.5px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);margin:16px 0 9px;display:flex;align-items:center;gap:7px}
 .wa-group-label::after{content:'';flex:1;height:2px;background:var(--border);opacity:0.15}
 .wa-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--card2);border:2px solid var(--border);color:var(--text);text-decoration:none;transition:all 0.15s;margin-bottom:9px;position:relative;overflow:hidden}
 .wa-item::before{display:none}
 .wa-item:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--border)}
-.wa-item-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#DCFCE7;border:2px solid var(--border)}
-html[data-theme="dark"] .wa-item-icon{background:var(--card)}
+.wa-item-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#DCFCE7;border:2px solid var(--border);color:#15803D}
+html[data-theme="dark"] .wa-item-icon{background:var(--card);color:var(--success)}
 .wa-item-info{flex:1;min-width:0}
 .wa-item-name{display:block;font-size:13px;font-weight:700;line-height:1.2;color:var(--text)}
-.wa-item-desc{display:block;font-size:11px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.wa-item-desc{display:block;font-size:12px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .wa-item-badge{flex-shrink:0;padding:3px 10px;border-radius:7px;font-size:10px;font-weight:800;border:2px solid var(--border);letter-spacing:0.2px}
-
 .faq-search{width:100%;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:13px 16px;color:var(--text);font-size:13.5px;outline:none;margin-bottom:18px;font-family:var(--font-b);font-weight:600;transition:all 0.15s;box-shadow:var(--shadow-sm)}
 .faq-search:focus{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--border)}
 .faq-search::placeholder{color:var(--muted);font-weight:500}
@@ -464,170 +521,271 @@ html[data-theme="dark"] .wa-item-icon{background:var(--card)}
 .faq-a-inner{padding:13px 18px 18px;font-size:13.5px;color:var(--text);opacity:0.85;line-height:1.8;border-top:2px solid var(--border);font-weight:500}
 .faq-cat{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:20px 0 10px;display:flex;align-items:center;gap:7px}
 .faq-cat::after{content:'';flex:1;height:2px;background:var(--border);opacity:0.15}
-
 .share-btn{background:var(--card2);border:2px solid var(--border);border-radius:8px;padding:5px 8px;color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0}
 .share-btn:hover{transform:translate(-1px,-1px);box-shadow:2px 2px 0 var(--border)}
 .share-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);font-size:12.5px;padding:11px 22px;border-radius:12px;z-index:9999;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;font-weight:700;border:2px solid var(--border)}
 .share-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #profile-avatar,#banner-bg img{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 
+#updates-list{display:flex;flex-direction:column;gap:2px;position:relative;padding-left:6px}
+.update-row{display:flex;align-items:flex-start;gap:11px;padding:10px 4px;position:relative}
+.update-row::before{content:'';position:absolute;left:3px;top:22px;bottom:-8px;width:2px;background:var(--border);opacity:0.15}
+.update-row:last-child::before{display:none}
+.update-dot{width:8px;height:8px;border-radius:2px;background:var(--accent);margin-top:6px;flex-shrink:0}
+.update-info{flex:1;display:flex;flex-direction:column;min-width:0}
+.update-date{font-size:10.5px;color:var(--muted);font-weight:700}
+.update-title{font-size:12.5px;margin-top:2px;line-height:1.5;color:var(--text);font-weight:500}
+.update-tag{flex-shrink:0;padding:3px 9px;border-radius:7px;font-size:10px;font-weight:800;background:#EFF6FF;color:var(--accent2);letter-spacing:0.3px;height:fit-content;border:2px solid var(--border)}
+html[data-theme="dark"] .update-tag{background:var(--card2)}
+
+.work-tabs{display:flex;gap:7px;overflow-x:auto;margin-bottom:14px;padding-bottom:2px}
+.work-tab{flex-shrink:0;padding:7px 14px;border-radius:9px;font-size:11.5px;font-weight:700;background:var(--card2);border:2px solid var(--border);color:var(--muted);cursor:pointer;font-family:var(--font-b);transition:all 0.15s}
+.work-tab.active{background:var(--accent);color:#fff;box-shadow:2px 2px 0 var(--border)}
+.works-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.work-card{text-decoration:none;color:var(--text);border-radius:14px;overflow:hidden;background:var(--card2);border:2px solid var(--border);transition:all 0.15s;display:block}
+.work-thumb-wrap{position:relative}
+.work-status-badge{position:absolute;top:6px;right:6px;display:flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:9.5px;font-weight:700;background:rgba(17,24,39,0.75);color:#fff;letter-spacing:0.2px}
+.work-card:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--border)}
+.work-thumb{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:var(--accent)}
+.work-info{padding:10px 11px}
+.work-title{font-size:11.5px;font-weight:700;line-height:1.3;color:var(--text)}
+.work-cat{font-size:11px;color:var(--muted);margin-top:2px;font-weight:600}
+
 @media(min-width:900px){
-  .nav{height:70px;padding:0 40px}.nav-logo{font-size:22px}.nav-tab{padding:9px 22px;font-size:14px}.nav-contact{padding:9px 20px;font-size:13px}
-  .page{padding:32px 0 60px}#banner-bg{height:280px}#profile-avatar{width:112px;height:112px;border-radius:24px}.profile-row{margin-top:-56px;gap:24px}#profile-name{font-size:32px}.hero-body{padding:0 38px 36px}
+  .topbar-actions{padding:0 40px}
+  .page{padding:30px 0 60px}#banner-bg{height:280px}#profile-avatar{width:112px;height:112px;border-radius:24px}.profile-row{margin-top:-56px;gap:24px}#profile-name{font-size:32px}.hero-body{padding:0 38px 36px}
   #stats-grid{grid-template-columns:repeat(4,1fr);gap:16px}.stat-card{padding:22px 16px}.stat-value{font-size:25px}.card{padding:26px}.page-section-title{font-size:26px}
+  footer{padding:16px 40px 8px}
 }
 @media(min-width:600px) and (max-width:899px){
-  .nav{height:64px;padding:0 24px}.nav-tab{padding:8px 16px;font-size:13px}#banner-bg{height:240px}#profile-avatar{width:100px;height:100px;border-radius:22px}.profile-row{margin-top:-50px}#profile-name{font-size:27px}.hero-body{padding:0 28px 30px}#stats-grid{grid-template-columns:repeat(4,1fr);gap:12px}
+  #banner-bg{height:250px}#profile-avatar{width:100px;height:100px;border-radius:22px}.profile-row{margin-top:-50px}#profile-name{font-size:27px}.hero-body{padding:0 28px 30px}#stats-grid{grid-template-columns:repeat(4,1fr);gap:12px}
 }
-@media(max-width:599px){
-  .nav{height:56px;padding:0 14px;gap:6px}.nav-logo{font-size:15px}.nav-tab{padding:6px 11px;font-size:11.5px}.nav-contact{padding:6px 11px;font-size:11.5px}
-  .page{padding:16px 14px 36px}#banner-bg{height:180px}#profile-avatar{width:76px;height:76px;border-radius:16px}.profile-row{margin-top:-38px;gap:14px}#profile-name{font-size:21px}.hero-body{padding:0 18px 22px}
+@media(max-width:899px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0);box-shadow:6px 0 0 var(--border)}
+  .main-wrap{margin-left:0}
+  .mtopbar{display:flex}
+  .topbar-actions{display:none}
+  .page{padding:16px 14px 36px;max-width:100%}#banner-bg{height:180px}#profile-avatar{width:76px;height:76px;border-radius:16px}.profile-row{margin-top:-38px;gap:14px}#profile-name{font-size:21px}.hero-body{padding:0 18px 22px}
   #stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}.stat-value{font-size:18px}.card{padding:16px}.social-btn,.weblink-btn,.wa-item{padding:10px 12px}.social-icon-wrap,.weblink-icon,.wa-item-icon{width:34px;height:34px}
+  .works-grid{grid-template-columns:repeat(2,1fr)}
   .hero-cta{padding:11px 18px;font-size:12.5px}.hero-cta-row{gap:9px}
   .avatar-verified{width:22px;height:22px}.avatar-verified svg{width:10px;height:10px}
+  footer{padding:16px 14px 8px}
 }
-@media(max-width:360px){.nav-tab{padding:5px 9px;font-size:10.5px}.nav-contact{display:none}#profile-name{font-size:19px}.theme-toggle{width:32px;height:32px}}
+@media(max-width:899px) and (orientation:landscape){
+  #banner-bg{height:140px}
+  .profile-row{margin-top:-30px}
+  #profile-avatar{width:64px;height:64px}
+  .sidebar{overflow-y:auto}
+}
+@media(max-width:360px){.theme-toggle{width:34px;height:34px}}
 </style>
-
 </head>
 <body>
-<div class="accent-glow"></div>
-<nav class="nav">
-  <div class="nav-logo" id="nav-logo"></div>
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="goPage('home',this)">Beranda</button>
-    <button class="nav-tab" onclick="goPage('faq',this)">FAQ</button>
-    <button class="nav-tab" onclick="goPage('tentang',this)">Tentang</button>
-    <button class="nav-tab" onclick="goPage('kebijakan',this)">Kebijakan</button>
+<div class="app">
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sb-top">
+    <div class="sb-logo-mark" id="nav-logo">XRZ</div>
+    <div>
+      <div class="sb-logo-text">XREZZKY</div>
+      <div class="sb-logo-sub">OFFICIAL</div>
+    </div>
   </div>
-  <div class="nav-right">
+  <nav class="sb-nav">
+    <button class="sb-item active" data-pg="home" onclick="goPage('home',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>
+      Beranda
+    </button>
+    <button class="sb-item" data-pg="faq" onclick="goPage('faq',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      FAQ
+    </button>
+    <button class="sb-item" data-pg="tentang" onclick="goPage('tentang',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+      Tentang
+    </button>
+    <button class="sb-item" data-pg="kebijakan" onclick="goPage('kebijakan',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 6v6c0 5 3.8 8.7 9 10 5.2-1.3 9-5 9-10V6l-9-4z"/></svg>
+      Kebijakan
+    </button>
+  </nav>
+  <div class="sb-profile">
+    <div class="sb-avatar-wrap"><img id="sb-avatar" alt="Avatar"></div>
+    <div id="sb-name"></div>
+    <div id="sb-badge" style="display:none"></div>
+    <div id="sb-socials"></div>
+  </div>
+</aside>
+
+<div class="main-wrap">
+  <div class="mtopbar">
+    <button class="hamburger" onclick="openSidebar()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="nav-logo">XRZ</div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Ganti tema">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
+  <div class="topbar-actions">
     <button class="theme-toggle" onclick="toggleTheme()" title="Ganti tema">
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     </button>
     <a href="mailto:xrezzkystore.idn@gmail.com" class="nav-contact">Kontak Admin</a>
   </div>
-</nav>
 
-<div class="page active" id="page-home">
-  <div class="hero">
-    <div id="banner-bg">
-      <div class="hero-shine"></div>
-      <div class="hero-badge-float" id="hero-status-badge" style="display:none">
-        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-        <span>CS Online</span>
+  <div class="accent-glow"></div>
+  <div class="accent-glow2"></div>
+
+  <div class="page active" id="page-home">
+    <div class="hero">
+      <div id="banner-bg">
+        <div class="hero-shine"></div>
+        <div class="hero-badge-float" id="hero-status-badge" style="display:none">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+          <span>CS Online</span>
+        </div>
       </div>
-    </div>
-    <div class="hero-body">
-      <div class="profile-row">
-        <div class="avatar-wrap">
-          <div class="avatar-ring"></div>
-          <img id="profile-avatar" alt="Avatar">
-          <div class="avatar-verified" id="avatar-verified-badge" style="display:none">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      <div class="hero-body">
+        <div class="profile-row">
+          <div class="avatar-wrap">
+            <div class="avatar-ring"></div>
+            <img id="profile-avatar" alt="Avatar">
+            <div class="avatar-verified" id="avatar-verified-badge" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+          <div class="profile-meta">
+            <div class="profile-badge" id="profile-badge" style="display:none"></div>
+            <h1 id="profile-name" style="display:none"></h1>
+            <div id="profile-tagline" style="display:none"></div>
           </div>
         </div>
-        <div class="profile-meta">
-          <div class="profile-badge" id="profile-badge" style="display:none"></div>
-          <h1 id="profile-name" style="display:none"></h1>
-          <div id="profile-tagline" style="display:none"></div>
+        <div class="profile-info-row">
+          <div class="profile-chip" id="chip-location-wrap" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:3px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="chip-location"></span></div>
+          <div class="profile-chip" id="chip-join-wrap" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:3px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="chip-join"></span></div>
+        </div>
+        <p id="profile-bio" style="display:none"></p>
+        <div class="hero-cta-row" id="hero-cta-row" style="display:none">
+          <a href="#" id="hero-cta-wa" class="hero-cta primary" target="_blank" rel="noopener" style="display:none">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.121 1.524 5.855L.058 23.75a.5.5 0 0 0 .61.638l6.09-1.596A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.87 9.87 0 0 1-5.031-1.378l-.36-.214-3.732.978.995-3.636-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.466 0 9.9 4.434 9.9 9.9 0 5.466-4.434 9.9-9.9 9.9z"/></svg>
+            <span>Chat WhatsApp</span>
+          </a>
+          <button class="hero-cta secondary" onclick="goPage('faq',document.querySelector('.sb-item[data-pg=faq]'))">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Lihat FAQ</span>
+          </button>
         </div>
       </div>
-      <div class="profile-info-row">
-        <div class="profile-chip" id="chip-location-wrap" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:3px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="chip-location"></span></div>
-        <div class="profile-chip" id="chip-join-wrap" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:3px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="chip-join"></span></div>
+    </div>
+
+    <div class="visitor-bar">
+      <div class="visitor-card">
+        <div class="visitor-dot green"></div>
+        <div class="visitor-info">
+          <span class="visitor-num" id="visitor-online">0</span>
+          <span class="visitor-label">Online sekarang</span>
+        </div>
       </div>
-      <p id="profile-bio" style="display:none"></p>
-      <div class="hero-cta-row" id="hero-cta-row" style="display:none">
-        <a href="#" id="hero-cta-wa" class="hero-cta primary" target="_blank" rel="noopener" style="display:none">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.121 1.524 5.855L.058 23.75a.5.5 0 0 0 .61.638l6.09-1.596A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.87 9.87 0 0 1-5.031-1.378l-.36-.214-3.732.978.995-3.636-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.466 0 9.9 4.434 9.9 9.9 0 5.466-4.434 9.9-9.9 9.9z"/></svg>
-          <span>Chat WhatsApp</span>
-        </a>
-        <button class="hero-cta secondary" onclick="goPage('faq',document.querySelector('.nav-tab[onclick*=faq]'))">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <span>Lihat FAQ</span>
-        </button>
+      <div class="visitor-card">
+        <div class="visitor-dot blue"></div>
+        <div class="visitor-info">
+          <span class="visitor-num" id="visitor-total">0</span>
+          <span class="visitor-label">Total pengunjung</span>
+        </div>
       </div>
+    </div>
+
+    <div class="section-block" id="stats-section" style="display:none">
+      <div class="sec-label">Overview</div><div id="stats-grid"></div>
+    </div>
+
+    <div class="section-block grid-2">
+      <div class="card" id="status-section" style="display:none">
+        <div class="card-title"><div class="card-dot"></div> Status Layanan</div>
+        <div id="status-list"></div>
+      </div>
+      <div class="card" id="monitor-section" style="display:none">
+        <div class="card-title"><div class="card-dot"></div> System Monitor</div>
+        <div id="monitor-list"></div>
+      </div>
+    </div>
+
+    <div class="section-block" id="ann-section" style="display:none">
+      <div class="card"><div class="card-title"><div class="card-dot"></div> Pengumuman Terbaru</div><div id="ann-list"></div></div>
+    </div>
+
+    <div class="section-block grid-2">
+      <div class="card" id="works-section" style="display:none">
+        <div class="card-title"><div class="card-dot"></div> Karya Saya</div>
+        <div class="work-tabs" id="work-tabs"></div>
+        <div class="works-grid" id="works-grid"></div>
+      </div>
+      <div class="card" id="updates-section" style="display:none">
+        <div class="card-title"><div class="card-dot"></div> Update Terbaru</div>
+        <div id="updates-list"></div>
+      </div>
+    </div>
+
+    <div class="section-block" id="socials-section" style="display:none">
+      <div class="card"><div class="card-title ct-toggle" onclick="toggleCollapse('socials-grid','ch-socials')"><div class="card-dot"></div> Sosial Media <span class="ct-count" id="ct-socials-count"></span><svg class="ct-chevron closed" id="ch-socials" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg></div><div id="socials-grid" class="collapsible-body" style="display:none"></div></div>
+    </div>
+    <div class="section-block" id="weblinks-section" style="display:none">
+      <div class="card"><div class="card-title"><div class="card-dot"></div> Link Website & Aplikasi</div><div id="weblinks-grid"></div></div>
+    </div>
+    <div class="section-block" id="wa-section" style="display:none">
+      <div class="card">
+        <div class="wa-header ct-toggle" onclick="toggleCollapse('wa-list','ch-wa')">
+          <div class="wa-logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#15803D"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div style="flex:1"><div class="wa-title">Komunitas</div><div class="wa-subtitle">Gabung komunitas resmi kami di WhatsApp</div></div>
+          <span class="ct-count" id="ct-wa-count"></span><svg class="ct-chevron closed" id="ch-wa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div id="wa-list" class="collapsible-body" style="display:none"></div>
+      </div>
+    </div>
+    <div class="section-block" id="services-section" style="display:none">
+      <div class="card"><div class="card-title ct-toggle" onclick="toggleCollapse('services-grid','ch-services')"><div class="card-dot"></div> Layanan <span class="ct-count" id="ct-services-count"></span><svg class="ct-chevron closed" id="ch-services" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg></div><div id="services-grid" class="collapsible-body" style="display:none"></div></div>
+    </div>
+    <div class="section-block" id="branches-section" style="display:none">
+      <div class="sec-label">Cabang Kami</div>
+      <div id="branches-grid" class="branches-grid"></div>
     </div>
   </div>
 
-  <div class="visitor-bar">
-    <div class="visitor-card">
-      <div class="visitor-dot green"></div>
-      <div class="visitor-info">
-        <span class="visitor-num" id="visitor-online">0</span>
-        <span class="visitor-label">Online sekarang</span>
-      </div>
-    </div>
-    <div class="visitor-card">
-      <div class="visitor-dot blue"></div>
-      <div class="visitor-info">
-        <span class="visitor-num" id="visitor-total">0</span>
-        <span class="visitor-label">Total pengunjung</span>
-      </div>
+  <div class="page" id="page-faq">
+    <div class="page-section"><div class="page-section-title">FAQ</div><div class="page-section-sub">Pertanyaan yang sering ditanyakan</div></div>
+    <input class="faq-search" id="faq-search" placeholder="Cari pertanyaan..." oninput="renderFaq(window._faqData||[],this.value)">
+    <div id="faq-list"><div class="faq-empty">Belum ada FAQ.</div></div>
+  </div>
+
+  <div class="page" id="page-tentang">
+    <div class="page-section"><div class="page-section-title">Tentang Kami</div><div class="page-section-sub">Kenali lebih jauh siapa kami</div></div>
+    <div class="card" id="about-section" style="display:none"><div class="card-title"><div class="card-dot"></div> Tentang</div><div class="prose" id="about-content"></div></div>
+    <div class="card"><div class="card-title"><div class="card-dot"></div> Hubungi Admin</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Untuk pertanyaan, laporan, atau kerjasama:</p>
+      <a href="mailto:xrezzkystore.idn@gmail.com" class="gmail-btn"><div class="gmail-icon"><svg width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 24L4 10h40z"/><path fill="#FBBC04" d="M4 10v28l10-14z"/><path fill="#34A853" d="M44 10v28L34 24z"/><path fill="#4285F4" d="M4 38h40L24 24z"/><path fill="#C5221F" d="M4 10l20 14 20-14z" opacity=".3"/></svg></div><div class="gmail-info"><div class="gl">Gmail Admin</div><div class="ge">xrezzkystore.idn@gmail.com</div></div></a>
     </div>
   </div>
 
-  <div class="section-block" id="ann-section" style="display:none">
-    <div class="card"><div class="card-title"><div class="card-dot"></div> Pengumuman Terbaru</div><div id="ann-list"></div></div>
-  </div>
-  <div class="section-block" id="stats-section" style="display:none">
-    <div class="sec-label">Overview</div><div id="stats-grid"></div>
-  </div>
-  <div class="section-block" id="socials-section" style="display:none">
-    <div class="card"><div class="card-title"><div class="card-dot"></div> Sosial Media</div><div id="socials-grid"></div></div>
-  </div>
-  <div class="section-block" id="weblinks-section" style="display:none">
-    <div class="card"><div class="card-title"><div class="card-dot"></div> Link Website & Aplikasi</div><div id="weblinks-grid"></div></div>
-  </div>
-  <div class="section-block" id="wa-section" style="display:none">
-    <div class="card">
-      <div class="wa-header">
-        <div class="wa-logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.121 1.524 5.855L.058 23.75a.5.5 0 0 0 .61.638l6.09-1.596A11.947 11.947 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.87 9.87 0 0 1-5.031-1.378l-.36-.214-3.732.978.995-3.636-.235-.374A9.861 9.861 0 0 1 2.1 12C2.1 6.534 6.534 2.1 12 2.1c5.466 0 9.9 4.434 9.9 9.9 0 5.466-4.434 9.9-9.9 9.9z"/></svg></div>
-        <div><div class="wa-title">WhatsApp Community</div><div class="wa-subtitle">Grup, Komunitas & Saluran resmi kami</div></div>
-      </div>
-      <div id="wa-grup-wrap" style="display:none"><div class="wa-group-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:4px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Grup WhatsApp</div><div id="wa-grup-list"></div></div>
-      <div id="wa-komunitas-wrap" style="display:none"><div class="wa-group-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:4px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Komunitas WhatsApp</div><div id="wa-komunitas-list"></div></div>
-      <div id="wa-saluran-wrap" style="display:none"><div class="wa-group-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="display:inline;vertical-align:-1px;margin-right:4px"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>Saluran WhatsApp</div><div id="wa-saluran-list"></div></div>
+  <div class="page" id="page-kebijakan">
+    <div class="page-section"><div class="page-section-title">Kebijakan & Aturan</div><div class="page-section-sub">Harap baca dan pahami kebijakan kami</div></div>
+    <div class="card" id="policy-section" style="display:none"><div class="card-title"><div class="card-dot"></div> Kebijakan</div><div class="prose" id="policy-content"></div></div>
+    <div class="card"><div class="card-title"><div class="card-dot"></div> Pertanyaan Kebijakan</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Ada pertanyaan terkait kebijakan?</p>
+      <a href="mailto:xrezzkystore.idn@gmail.com" class="gmail-btn"><div class="gmail-icon"><svg width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 24L4 10h40z"/><path fill="#FBBC04" d="M4 10v28l10-14z"/><path fill="#34A853" d="M44 10v28L34 24z"/><path fill="#4285F4" d="M4 38h40L24 24z"/><path fill="#C5221F" d="M4 10l20 14 20-14z" opacity=".3"/></svg></div><div class="gmail-info"><div class="gl">Gmail Admin</div><div class="ge">xrezzkystore.idn@gmail.com</div></div></a>
     </div>
   </div>
-  <div class="section-block" id="services-section" style="display:none">
-    <div class="card"><div class="card-title"><div class="card-dot"></div> Layanan</div><div id="services-grid"></div></div>
-  </div>
-  <div class="section-block" id="branches-section" style="display:none">
-    <div class="sec-label">Cabang Kami</div>
-    <div id="branches-grid" class="branches-grid"></div>
-  </div>
-</div>
 
-<div class="page" id="page-faq">
-  <div class="page-section"><div class="page-section-title">FAQ</div><div class="page-section-sub">Pertanyaan yang sering ditanyakan</div></div>
-  <input class="faq-search" id="faq-search" placeholder="Cari pertanyaan..." oninput="renderFaq(window._faqData||[],this.value)">
-  <div id="faq-list"><div class="faq-empty">Belum ada FAQ.</div></div>
+  <footer>
+    <div id="footer-copy" style="display:none"></div>
+    <div id="footer-tagline" style="display:none"></div>
+    <div id="footer-version" style="font-size:11px;color:var(--muted);opacity:0.7">Powered by XREZZKY · <span id="footer-version-num">v1.0.0</span></div>
+  </footer>
 </div>
-
-<div class="page" id="page-tentang">
-  <div class="page-section"><div class="page-section-title">Tentang Kami</div><div class="page-section-sub">Kenali lebih jauh siapa kami</div></div>
-  <div class="card" id="about-section" style="display:none"><div class="card-title"><div class="card-dot"></div> Tentang</div><div class="prose" id="about-content"></div></div>
-  <div class="card"><div class="card-title"><div class="card-dot"></div> Hubungi Admin</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Untuk pertanyaan, laporan, atau kerjasama:</p>
-    <a href="mailto:xrezzkystore.idn@gmail.com" class="gmail-btn"><div class="gmail-icon"><svg width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 24L4 10h40z"/><path fill="#FBBC04" d="M4 10v28l10-14z"/><path fill="#34A853" d="M44 10v28L34 24z"/><path fill="#4285F4" d="M4 38h40L24 24z"/><path fill="#C5221F" d="M4 10l20 14 20-14z" opacity=".3"/></svg></div><div class="gmail-info"><div class="gl">Gmail Admin</div><div class="ge">xrezzkystore.idn@gmail.com</div></div></a>
-  </div>
 </div>
-
-<div class="page" id="page-kebijakan">
-  <div class="page-section"><div class="page-section-title">Kebijakan & Aturan</div><div class="page-section-sub">Harap baca dan pahami kebijakan kami</div></div>
-  <div class="card" id="policy-section" style="display:none"><div class="card-title"><div class="card-dot"></div> Kebijakan</div><div class="prose" id="policy-content"></div></div>
-  <div class="card"><div class="card-title"><div class="card-dot"></div> Pertanyaan Kebijakan</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Ada pertanyaan terkait kebijakan?</p>
-    <a href="mailto:xrezzkystore.idn@gmail.com" class="gmail-btn"><div class="gmail-icon"><svg width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 24L4 10h40z"/><path fill="#FBBC04" d="M4 10v28l10-14z"/><path fill="#34A853" d="M44 10v28L34 24z"/><path fill="#4285F4" d="M4 38h40L24 24z"/><path fill="#C5221F" d="M4 10l20 14 20-14z" opacity=".3"/></svg></div><div class="gmail-info"><div class="gl">Gmail Admin</div><div class="ge">xrezzkystore.idn@gmail.com</div></div></a>
-  </div>
-</div>
-
-<footer>
-  <div id="footer-copy" style="display:none"></div>
-  <div id="footer-tagline" style="display:none"></div>
-</footer>
 
 <div class="share-toast" id="share-toast"></div>
 
@@ -645,7 +803,6 @@ html[data-theme="dark"] .wa-item-icon{background:var(--card)}
 </div>
 
 <script>
-// ── DARK / LIGHT MODE ──
 function toggleTheme(){
   var cur = document.documentElement.getAttribute('data-theme') || 'light';
   var next = cur === 'light' ? 'dark' : 'light';
@@ -653,15 +810,38 @@ function toggleTheme(){
   try{ localStorage.setItem('_theme', next); }catch(e){}
 }
 
+function openSidebar(){ el('sidebar').classList.add('open'); el('sidebar-overlay').classList.add('show'); }
+function closeSidebar(){ el('sidebar').classList.remove('open'); el('sidebar-overlay').classList.remove('show'); }
+
+function toggleCollapse(bodyId, chevronId){
+  var body=el(bodyId), chev=el(chevronId);
+  if(!body) return;
+  var isOpen = body.style.display!=='none';
+  body.style.display = isOpen ? 'none' : '';
+  if(chev) chev.classList.toggle('closed', isOpen);
+}
+
 window._faqData=[];
+window._worksData=[];
+window._currentPage='home';
 function goPage(name,btn){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
-  document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.sb-item').forEach(function(b){b.classList.remove('active');});
   var pg=document.getElementById('page-'+name);
   if(pg) pg.classList.add('active');
   if(btn) btn.classList.add('active');
+  else { var m=document.querySelector('.sb-item[data-pg="'+name+'"]'); if(m) m.classList.add('active'); }
+  window._currentPage=name;
+  updateFloatingWa();
+  closeSidebar();
   window.scrollTo({top:0,behavior:'smooth'});
   if(name==='faq'){var s=document.getElementById('faq-search');if(s)s.value='';renderFaq(window._faqData||[],'')}
+}
+function updateFloatingWa(){
+  var fw=el('floating-wa');
+  if(!fw) return;
+  if(window._waUrl && window._currentPage!=='home'){ fw.style.display='flex'; }
+  else { fw.style.display='none'; }
 }
 function renderFaq(items,query){
   var c=document.getElementById('faq-list');if(!c)return;
@@ -696,6 +876,36 @@ function toggleFaq(id){
   document.querySelectorAll('.faq-item.open').forEach(function(e){e.classList.remove('open');});
   if(!was)el.classList.add('open');
 }
+
+function workStatusBadge(status){
+  var s=(status||'').toLowerCase();
+  var map={
+    online:{emoji:'🟢',label:'Online'},
+    maintenance:{emoji:'🟡',label:'Maintenance'},
+    offline:{emoji:'🔴',label:'Offline'},
+    development:{emoji:'🚧',label:'Development'}
+  };
+  var m=map[s];
+  if(!m) return '';
+  return '<span class="work-status-badge">'+m.emoji+' '+m.label+'</span>';
+}
+function renderWorks(items, activeCat){
+  var tabsEl=document.getElementById('work-tabs');
+  var gridEl=document.getElementById('works-grid');
+  if(!tabsEl||!gridEl) return;
+  var cats=['Semua'];
+  (items||[]).forEach(function(w){ if(w.category && cats.indexOf(w.category)===-1) cats.push(w.category); });
+  tabsEl.innerHTML=cats.map(function(c){
+    return '<button class="work-tab'+(c===activeCat?' active':'')+'" onclick="renderWorks(window._worksData,\''+c.replace(/'/g,"\\'")+'\')">'+c+'</button>';
+  }).join('');
+  var filtered=(activeCat==='Semua')?(items||[]):(items||[]).filter(function(w){return w.category===activeCat;});
+  gridEl.innerHTML=filtered.map(function(w){
+    var thumbInner=w.image?'<img class="work-thumb" src="'+w.image+'" alt="'+(w.title||'')+'">':'<div class="work-thumb"></div>';
+    var thumb='<div class="work-thumb-wrap">'+thumbInner+workStatusBadge(w.status)+'</div>';
+    return '<a class="work-card" href="'+(w.url||'#')+'" target="_blank" rel="noopener">'+thumb+'<div class="work-info"><div class="work-title">'+(w.title||'')+'</div><div class="work-cat">'+(w.category||'')+'</div></div></a>';
+  }).join('');
+}
+
 function shareContent(encodedText,type){
   var text=decodeURIComponent(encodedText);
   var url=window.location.href.split('?')[0];
@@ -723,9 +933,12 @@ function closeMediaModal(){
   if(modal)modal.classList.remove('open');if(vid){vid.pause();vid.src='';}
   document.body.style.overflow='';
 }
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMediaModal();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeMediaModal();closeSidebar();}});
 document.addEventListener('contextmenu',function(e){var t=e.target;if(t.id==='profile-avatar'||t.closest&&t.closest('#banner-bg'))e.preventDefault();});
 document.addEventListener('dragstart',function(e){if(e.target.id==='profile-avatar')e.preventDefault();});
+
+window.addEventListener('resize', function(){ closeSidebar(); });
+window.addEventListener('orientationchange', function(){ closeSidebar(); });
 </script>
 </body>
 </html>
