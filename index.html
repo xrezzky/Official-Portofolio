@@ -565,8 +565,10 @@ html[data-theme="dark"] .update-tag{background:var(--card2)}
   margin-bottom: 16px;
 }
 
-.legal-docs-header .legal-icon {
-  font-size: 22px;
+.legal-docs-header .legal-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke: var(--accent);
 }
 
 .legal-docs-header h3 {
@@ -643,12 +645,17 @@ html[data-theme="dark"] .update-tag{background:var(--card2)}
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
   flex-shrink: 0;
 }
 
 html[data-theme="dark"] .legal-doc-icon {
   background: var(--card);
+}
+
+.legal-doc-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--accent);
 }
 
 .legal-doc-info {
@@ -710,146 +717,7 @@ html[data-theme="dark"] .legal-doc-icon {
   transform: translate(2px, -2px);
 }
 
-/* ===== LEGAL PAGE MODAL ===== */
-.legal-modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 5000;
-  background: rgba(0,0,0,0.7);
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: fadeIn 0.25s ease;
-}
-
-.legal-modal-overlay.open {
-  display: flex;
-}
-
-.legal-modal {
-  background: var(--card);
-  border: 2px solid var(--border);
-  border-radius: 18px;
-  max-width: 720px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: 30px 32px 24px;
-  box-shadow: 8px 8px 0 var(--border);
-  position: relative;
-  animation: slideUp 0.3s ease;
-}
-
-.legal-modal .modal-close {
-  position: sticky;
-  top: 0;
-  float: right;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--card2);
-  border: 2px solid var(--border);
-  color: var(--text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  transition: all 0.15s;
-  margin-bottom: 8px;
-}
-
-.legal-modal .modal-close:hover {
-  transform: translate(-1px,-1px);
-  box-shadow: 2px 2px 0 var(--border);
-}
-
-.legal-modal .modal-badge {
-  display: inline-block;
-  padding: 3px 12px;
-  border-radius: 8px;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  background: #EFF6FF;
-  color: var(--accent2);
-  border: 2px solid var(--border);
-  margin-bottom: 10px;
-}
-
-html[data-theme="dark"] .legal-modal .modal-badge {
-  background: var(--card2);
-}
-
-.legal-modal h2 {
-  font-family: var(--font-d);
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text);
-  margin-bottom: 6px;
-}
-
-.legal-modal .modal-meta {
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 600;
-  margin-bottom: 16px;
-}
-
-.legal-modal .modal-body {
-  font-size: 14px;
-  line-height: 1.9;
-  color: var(--text);
-  opacity: 0.9;
-}
-
-.legal-modal .modal-body h3 {
-  font-family: var(--font-d);
-  font-size: 16px;
-  font-weight: 700;
-  margin: 18px 0 8px;
-  color: var(--text);
-  opacity: 1;
-}
-
-.legal-modal .modal-body ul,
-.legal-modal .modal-body ol {
-  margin: 6px 0 12px;
-  padding-left: 22px;
-}
-
-.legal-modal .modal-body li {
-  margin-bottom: 4px;
-}
-
-.legal-modal .modal-body .highlight-box {
-  background: var(--card2);
-  border: 2px solid var(--border);
-  border-radius: 10px;
-  padding: 14px 18px;
-  margin: 14px 0;
-}
-
-.legal-modal .modal-body .highlight-box strong {
-  color: var(--accent);
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { transform: translateY(30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
 @media(max-width:899px){
-  .legal-modal { padding: 20px 18px; margin: 10px; }
-  .legal-modal h2 { font-size: 18px; }
-  .legal-modal .modal-body { font-size: 13px; }
   .legal-docs-grid { grid-template-columns: 1fr; }
 }
 
@@ -1113,17 +981,17 @@ html[data-theme="dark"] .legal-modal .modal-badge {
     <div class="legal-docs-section">
       <div class="legal-docs-header">
         <span class="legal-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v16h16V4H4z"/><path d="M8 9h8"/><path d="M8 13h6"/><path d="M8 17h4"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v16h16V4H4z"/><path d="M8 9h8"/><path d="M8 13h6"/><path d="M8 17h4"/></svg>
         </span>
         <h3>Dokumen Legal</h3>
         <span class="legal-sub">— Pusat Kebijakan XREZZKY</span>
       </div>
       <div class="legal-docs-grid">
         <!-- Privacy Policy -->
-        <div class="legal-doc-card" onclick="openLegalModal('privacy')">
+        <a href="privacy.html" class="legal-doc-card">
           <div class="legal-doc-card-top">
             <div class="legal-doc-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
             <div class="legal-doc-info">
               <div class="legal-doc-title">Privacy Policy</div>
@@ -1131,13 +999,13 @@ html[data-theme="dark"] .legal-modal .modal-badge {
             </div>
           </div>
           <span class="legal-doc-btn">Buka <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-        </div>
+        </a>
 
         <!-- Terms of Service -->
-        <div class="legal-doc-card" onclick="openLegalModal('terms')">
+        <a href="terms.html" class="legal-doc-card">
           <div class="legal-doc-card-top">
             <div class="legal-doc-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             </div>
             <div class="legal-doc-info">
               <div class="legal-doc-title">Terms of Service</div>
@@ -1145,13 +1013,13 @@ html[data-theme="dark"] .legal-modal .modal-badge {
             </div>
           </div>
           <span class="legal-doc-btn">Buka <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-        </div>
+        </a>
 
         <!-- Marketplace Policy -->
-        <div class="legal-doc-card" onclick="openLegalModal('marketplace')">
+        <a href="marketplace-policy.html" class="legal-doc-card">
           <div class="legal-doc-card-top">
             <div class="legal-doc-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
             </div>
             <div class="legal-doc-info">
               <div class="legal-doc-title">Marketplace Policy</div>
@@ -1159,13 +1027,13 @@ html[data-theme="dark"] .legal-modal .modal-badge {
             </div>
           </div>
           <span class="legal-doc-btn">Buka <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-        </div>
+        </a>
 
         <!-- Community Guidelines -->
-        <div class="legal-doc-card" onclick="openLegalModal('community')">
+        <a href="community-guidelines.html" class="legal-doc-card">
           <div class="legal-doc-card-top">
             <div class="legal-doc-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
             <div class="legal-doc-info">
               <div class="legal-doc-title">Community Guidelines</div>
@@ -1173,13 +1041,13 @@ html[data-theme="dark"] .legal-modal .modal-badge {
             </div>
           </div>
           <span class="legal-doc-btn">Buka <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-        </div>
+        </a>
 
         <!-- AI Usage Policy -->
-        <div class="legal-doc-card" onclick="openLegalModal('ai')">
+        <a href="ai-policy.html" class="legal-doc-card">
           <div class="legal-doc-card-top">
             <div class="legal-doc-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 4 8 12 8 12s8-8 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 0 0-8 8c0 4 8 12 8 12s8-8 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
             </div>
             <div class="legal-doc-info">
               <div class="legal-doc-title">AI Usage Policy</div>
@@ -1187,13 +1055,13 @@ html[data-theme="dark"] .legal-modal .modal-badge {
             </div>
           </div>
           <span class="legal-doc-btn">Buka <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-        </div>
+        </a>
 
         <!-- Anonymous Chat Policy -->
-        <div class="legal-doc-card" onclick="openLegalModal('anonymous')">
+        <a href="anonymous-chat-policy.html" class="legal-doc-card">
           <div class="legal-doc-card-top">
             <div class="legal-doc-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
             <div class="legal-doc-info">
               <div class="legal-doc-title">Anonymous Chat Policy</div>
@@ -1201,13 +1069,13 @@ html[data-theme="dark"] .legal-modal .modal-badge {
             </div>
           </div>
           <span class="legal-doc-btn">Buka <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-        </div>
+        </a>
 
         <!-- Data Deletion -->
-        <div class="legal-doc-card" onclick="openLegalModal('deletion')">
+        <a href="data-deletion.html" class="legal-doc-card">
           <div class="legal-doc-card-top">
             <div class="legal-doc-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
             </div>
             <div class="legal-doc-info">
               <div class="legal-doc-title">Data Deletion</div>
@@ -1215,7 +1083,7 @@ html[data-theme="dark"] .legal-modal .modal-badge {
             </div>
           </div>
           <span class="legal-doc-btn">Buka <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-        </div>
+        </a>
       </div>
     </div>
     <!-- ===== END DOKUMEN LEGAL ===== -->
@@ -1227,16 +1095,6 @@ html[data-theme="dark"] .legal-modal .modal-badge {
     <div id="footer-version" style="font-size:11px;color:var(--muted);opacity:0.7">Powered by XREZZKY · <span id="footer-version-num">v1.0.0</span></div>
   </footer>
 </div>
-</div>
-
-<!-- ===== LEGAL MODAL ===== -->
-<div class="legal-modal-overlay" id="legalModal" onclick="closeLegalModal(event)">
-  <div class="legal-modal" onclick="event.stopPropagation()">
-    <button class="modal-close" onclick="closeLegalModal()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-    <div id="legalModalContent"></div>
-  </div>
 </div>
 
 <div class="share-toast" id="share-toast"></div>
@@ -1391,142 +1249,6 @@ document.addEventListener('dragstart',function(e){if(e.target.id==='profile-avat
 
 window.addEventListener('resize', function(){ closeSidebar(); });
 window.addEventListener('orientationchange', function(){ closeSidebar(); });
-
-// ===== LEGAL MODAL FUNCTIONS =====
-var legalData = {
-  privacy: {
-    badge: '🔒 Kebijakan Privasi',
-    title: 'Privacy Policy',
-    meta: 'Berlaku sejak: 14 Juli 2026 · Terakhir diperbarui: 14 Juli 2026',
-    body: `
-      <p>XREZZKY OFFICIAL berkomitmen untuk melindungi privasi dan data pribadi Anda. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, menyimpan, dan melindungi informasi yang Anda berikan saat menggunakan layanan kami.</p>
-      
-      <p><em>Konten kebijakan privasi lengkap akan diisi oleh tim XREZZKY OFFICIAL.</em></p>
-      
-      <h3>Kontak</h3>
-      <div class="highlight-box">
-        <p><strong>Email:</strong> <a href="mailto:xrezzkystore.idn@gmail.com" style="color:var(--accent);font-weight:700;">xrezzkystore.idn@gmail.com</a></p>
-        <p><strong>Website:</strong> <a href="/" style="color:var(--accent);font-weight:700;">xrezzky.my.id</a></p>
-      </div>
-    `
-  },
-  terms: {
-    badge: '📋 Syarat & Ketentuan',
-    title: 'Terms of Service',
-    meta: 'Berlaku sejak: 14 Juli 2026 · Terakhir diperbarui: 14 Juli 2026',
-    body: `
-      <p>Dengan menggunakan layanan XREZZKY OFFICIAL, Anda menyetujui Syarat dan Ketentuan yang berlaku.</p>
-      
-      <p><em>Konten Terms of Service lengkap akan diisi oleh tim XREZZKY OFFICIAL.</em></p>
-      
-      <h3>Kontak</h3>
-      <div class="highlight-box">
-        <p><strong>Email:</strong> <a href="mailto:xrezzkystore.idn@gmail.com" style="color:var(--accent);font-weight:700;">xrezzkystore.idn@gmail.com</a></p>
-      </div>
-    `
-  },
-  marketplace: {
-    badge: '🛒 Kebijakan Marketplace',
-    title: 'Marketplace Policy',
-    meta: 'Berlaku sejak: 14 Juli 2026 · Terakhir diperbarui: 14 Juli 2026',
-    body: `
-      <p>Kebijakan Marketplace XREZZKY OFFICIAL mengatur segala transaksi pembelian, pembayaran, refund, dan aktivitas reseller.</p>
-      
-      <p><em>Konten Marketplace Policy lengkap akan diisi oleh tim XREZZKY OFFICIAL.</em></p>
-      
-      <h3>Kontak</h3>
-      <div class="highlight-box">
-        <p><strong>Email:</strong> <a href="mailto:xrezzkystore.idn@gmail.com" style="color:var(--accent);font-weight:700;">xrezzkystore.idn@gmail.com</a></p>
-      </div>
-    `
-  },
-  community: {
-    badge: '👥 Pedoman Komunitas',
-    title: 'Community Guidelines',
-    meta: 'Berlaku sejak: 14 Juli 2026 · Terakhir diperbarui: 14 Juli 2026',
-    body: `
-      <p>Pedoman Komunitas XREZZKY OFFICIAL mengatur perilaku pengguna di seluruh layanan kami.</p>
-      
-      <p><em>Konten Community Guidelines lengkap akan diisi oleh tim XREZZKY OFFICIAL.</em></p>
-      
-      <h3>Kontak</h3>
-      <div class="highlight-box">
-        <p><strong>Email:</strong> <a href="mailto:xrezzkystore.idn@gmail.com" style="color:var(--accent);font-weight:700;">xrezzkystore.idn@gmail.com</a></p>
-      </div>
-    `
-  },
-  ai: {
-    badge: '🤖 Kebijakan AI',
-    title: 'AI Usage Policy',
-    meta: 'Berlaku sejak: 14 Juli 2026 · Terakhir diperbarui: 14 Juli 2026',
-    body: `
-      <p>Kebijakan Penggunaan XREZZKY AI mengatur penggunaan dan batasan fitur kecerdasan buatan.</p>
-      
-      <p><em>Konten AI Usage Policy lengkap akan diisi oleh tim XREZZKY OFFICIAL.</em></p>
-      
-      <h3>Kontak</h3>
-      <div class="highlight-box">
-        <p><strong>Email:</strong> <a href="mailto:xrezzkystore.idn@gmail.com" style="color:var(--accent);font-weight:700;">xrezzkystore.idn@gmail.com</a></p>
-      </div>
-    `
-  },
-  anonymous: {
-    badge: '💬 Kebijakan Chat Anonim',
-    title: 'Anonymous Chat Policy',
-    meta: 'Berlaku sejak: 14 Juli 2026 · Terakhir diperbarui: 14 Juli 2026',
-    body: `
-      <p>Kebijakan Anonymous Chat mengatur penggunaan layanan XREZZKY ANON dan fitur chat anonim.</p>
-      
-      <p><em>Konten Anonymous Chat Policy lengkap akan diisi oleh tim XREZZKY OFFICIAL.</em></p>
-      
-      <h3>Kontak</h3>
-      <div class="highlight-box">
-        <p><strong>Email:</strong> <a href="mailto:xrezzkystore.idn@gmail.com" style="color:var(--accent);font-weight:700;">xrezzkystore.idn@gmail.com</a></p>
-      </div>
-    `
-  },
-  deletion: {
-    badge: '🗑️ Penghapusan Data',
-    title: 'Data Deletion',
-    meta: 'Berlaku sejak: 14 Juli 2026 · Terakhir diperbarui: 14 Juli 2026',
-    body: `
-      <p>Kebijakan Penghapusan Data menjelaskan cara pengguna meminta penghapusan akun maupun data pribadi.</p>
-      
-      <p><em>Konten Data Deletion lengkap akan diisi oleh tim XREZZKY OFFICIAL.</em></p>
-      
-      <h3>Kontak</h3>
-      <div class="highlight-box">
-        <p><strong>Email:</strong> <a href="mailto:xrezzkystore.idn@gmail.com" style="color:var(--accent);font-weight:700;">xrezzkystore.idn@gmail.com</a></p>
-      </div>
-    `
-  }
-};
-
-function openLegalModal(type) {
-  var data = legalData[type];
-  if (!data) return;
-  
-  var content = document.getElementById('legalModalContent');
-  content.innerHTML = `
-    <div class="modal-badge">${data.badge}</div>
-    <h2>${data.title}</h2>
-    <div class="modal-meta">${data.meta}</div>
-    <div class="modal-body">${data.body}</div>
-    <div style="margin-top:16px;padding-top:14px;border-top:2px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;">
-      <a href="mailto:xrezzkystore.idn@gmail.com" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;background:var(--card2);border:2px solid var(--border);color:var(--text);text-decoration:none;font-size:12.5px;font-weight:700;transition:all 0.15s;">✉️ Hubungi Admin</a>
-      <button onclick="closeLegalModal()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;background:var(--accent);border:2px solid var(--border);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--font-b);transition:all 0.15s;box-shadow:2px 2px 0 var(--border);">Tutup</button>
-    </div>
-  `;
-  
-  document.getElementById('legalModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeLegalModal(e) {
-  if (e && e.target !== e.currentTarget) return;
-  document.getElementById('legalModal').classList.remove('open');
-  document.body.style.overflow = '';
-}
 </script>
 </body>
-      </html>
+  </html>
