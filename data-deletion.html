@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Deletion Policy - XREZZKY OFFICIAL</title>
+<meta name="description" content="Kebijakan Penghapusan Data XREZZKY OFFICIAL - Cara pengguna meminta penghapusan akun maupun data">
+<script>
+(function(){
+  try{ var t = localStorage.getItem('_theme') || 'light'; document.documentElement.setAttribute('data-theme', t); }catch(e){}
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent:#2563EB;--accent2:#1D4ED8;--bg:#F5F7FB;--card:#FFFFFF;
+  --card2:#F9FAFC;--border:#111827;--text:#111827;
+  --muted:#6B7280;--success:#22C55E;--warning:#F59E0B;--danger:#EF4444;
+  --font-d:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;--r:16px;
+  --shadow-sm:3px 3px 0 var(--border);--shadow-md:5px 5px 0 var(--border);
+}
+html[data-theme="dark"]{
+  --bg:#101216;--card:#181B22;--card2:#1E222B;
+  --border:#000000;--text:#F3F4F6;--muted:#9CA3AF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:15px;line-height:1.6;min-height:100vh;transition:background 0.2s,color 0.2s}
+
+.header{background:var(--card);border-bottom:2px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;position:sticky;top:0;z-index:100}
+.logo{font-family:var(--font-d);font-weight:800;font-size:20px;color:var(--text);text-decoration:none;display:flex;align-items:center;gap:8px}
+.logo .logo-icon{color:var(--accent)}
+.header-actions{display:flex;align-items:center;gap:10px}
+.theme-toggle{width:38px;height:38px;border-radius:10px;background:var(--card2);border:2px solid var(--border);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;box-shadow:2px 2px 0 var(--border)}
+.theme-toggle:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--border)}
+.theme-toggle svg{width:16px;height:16px}
+.theme-toggle .icon-sun{display:none}
+html[data-theme="dark"] .theme-toggle .icon-moon{display:none}
+html[data-theme="dark"] .theme-toggle .icon-sun{display:block}
+
+.container{max-width:780px;margin:0 auto;padding:24px 20px 50px}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-bottom:16px;flex-wrap:wrap;font-weight:600}
+.breadcrumb a{color:var(--accent);text-decoration:none;font-weight:700}
+.breadcrumb a:hover{text-decoration:underline}
+.breadcrumb .sep{opacity:0.4}
+.breadcrumb .current{color:var(--text)}
+
+.legal-hero{background:var(--card);border:2px solid var(--border);border-radius:18px;padding:28px 30px 24px;margin-bottom:20px;box-shadow:var(--shadow-md);position:relative;overflow:hidden}
+.legal-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--accent)}
+.legal-hero .legal-badge{display:inline-block;padding:4px 14px;border-radius:8px;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;background:#EFF6FF;color:var(--accent2);border:2px solid var(--border);margin-bottom:12px}
+html[data-theme="dark"] .legal-hero .legal-badge{background:var(--card2)}
+.legal-hero h1{font-family:var(--font-d);font-size:28px;font-weight:800;color:var(--text);line-height:1.2}
+.legal-hero .legal-subtitle{font-size:14px;color:var(--muted);font-weight:600;margin-top:2px}
+.legal-hero .legal-meta{display:flex;align-items:center;gap:16px;margin-top:10px;flex-wrap:wrap}
+.legal-hero .legal-meta span{font-size:12px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:4px}
+.legal-hero .legal-meta .dot{width:4px;height:4px;border-radius:50%;background:var(--muted)}
+
+.legal-content{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:24px 28px;box-shadow:var(--shadow-sm)}
+.legal-content .prose{font-size:14px;line-height:1.9;color:var(--text);opacity:0.9}
+.legal-content .prose strong{color:var(--text);font-weight:800;opacity:1}
+.legal-content .prose h2{font-family:var(--font-d);font-size:19px;font-weight:800;margin:28px 0 12px;color:var(--text);opacity:1;letter-spacing:-0.3px}
+.legal-content .prose h3{font-family:var(--font-d);font-size:15px;font-weight:700;margin:18px 0 8px;color:var(--text);opacity:1}
+.legal-content .prose h4{font-size:13.5px;font-weight:700;margin:14px 0 6px;color:var(--text);opacity:1}
+.legal-content .prose ul,.legal-content .prose ol{margin:8px 0 14px;padding-left:24px}
+.legal-content .prose li{margin-bottom:4px;list-style-type:disc}
+.legal-content .prose .highlight-box{background:var(--card2);border:2px solid var(--border);border-radius:12px;padding:16px 20px;margin:16px 0}
+.legal-content .prose .highlight-box strong{color:var(--accent)}
+.legal-content .prose .divider{height:2px;background:var(--border);opacity:0.1;margin:28px 0}
+.legal-content .prose .tag-group{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}
+.legal-content .prose .tag-item{display:inline-block;padding:3px 12px;border-radius:8px;font-size:12px;font-weight:700;background:var(--card2);border:2px solid var(--border);color:var(--text)}
+html[data-theme="dark"] .legal-content .prose .tag-item{background:var(--card)}
+.legal-content .prose .service-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 14px}
+.legal-content .prose .service-list .svc-item{padding:6px 12px;border-radius:8px;background:var(--card2);border:2px solid var(--border);font-size:13px;font-weight:600;text-align:center}
+html[data-theme="dark"] .legal-content .prose .service-list .svc-item{background:var(--card)}
+@media(max-width:599px){.legal-content .prose .service-list{grid-template-columns:1fr 1fr}}
+
+.legal-footer-nav{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:18px;border-top:2px solid var(--border);flex-wrap:wrap;gap:12px}
+.legal-footer-nav .back-to-policy{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;background:var(--card);border:2px solid var(--border);color:var(--text);text-decoration:none;font-size:12.5px;font-weight:700;transition:all 0.15s;box-shadow:var(--shadow-sm)}
+.legal-footer-nav .back-to-policy:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--border)}
+.legal-footer-nav .back-to-policy svg{width:14px;height:14px}
+.legal-footer-nav .legal-updated{font-size:11.5px;color:var(--muted);font-weight:600}
+
+.footer{border-top:2px solid var(--border);padding:20px 24px 10px;max-width:780px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.footer span{font-size:11.5px;color:var(--muted);font-weight:600}
+
+@media(max-width:899px){
+  .header{padding:12px 16px}
+  .legal-hero{padding:20px 18px}
+  .legal-hero h1{font-size:22px}
+  .legal-content{padding:18px 16px}
+  .container{padding:16px 14px 36px}
+  .legal-footer-nav{flex-direction:column;align-items:stretch}
+  .legal-footer-nav .back-to-policy{justify-content:center}
+  .footer{padding:16px 14px 8px}
+}
+@media(min-width:900px){
+  .legal-hero{padding:32px 36px 28px}
+  .legal-hero h1{font-size:32px}
+  .legal-content{padding:28px 34px}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a href="index.html" class="logo"><span class="logo-icon">✦</span> XREZZKY OFFICIAL</a>
+  <div class="header-actions">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Ganti tema">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="breadcrumb">
+    <a href="index.html">Beranda</a><span class="sep">/</span>
+    <a href="index.html#page-kebijakan">Kebijakan</a><span class="sep">/</span>
+    <span class="current">Data Deletion Policy</span>
+  </div>
+
+  <div class="legal-hero">
+    <div class="legal-badge">🗑️ Kebijakan Penghapusan Data</div>
+    <h1>Data Deletion Policy</h1>
+    <div class="legal-subtitle">XREZZKY OFFICIAL</div>
+    <div class="legal-meta">
+      <span>📅 Terakhir diperbarui: 14 Juli 2026</span>
+    </div>
+  </div>
+
+  <div class="legal-content">
+    <div class="prose">
+
+      <p>XREZZKY OFFICIAL menghargai hak setiap pengguna atas data pribadinya.</p>
+
+      <p>Dokumen ini menjelaskan bagaimana pengguna dapat meminta penghapusan akun maupun data yang terkait dengan seluruh layanan XREZZKY OFFICIAL.</p>
+
+      <p>Kebijakan ini berlaku untuk seluruh layanan yang berada di bawah naungan XREZZKY OFFICIAL, termasuk namun tidak terbatas pada:</p>
+
+      <div class="service-list">
+        <div class="svc-item">XREZZKY STORE</div>
+        <div class="svc-item">XREZZKY ANON</div>
+        <div class="svc-item">XREZZKY CHATROOM</div>
+        <div class="svc-item">XREZZKY AI</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <h2>1. Hak Pengguna</h2>
+      <p>Pengguna berhak mengajukan permintaan untuk menghapus akun maupun data pribadi yang dimiliki oleh XREZZKY OFFICIAL sesuai dengan ketentuan yang berlaku.</p>
+      <p>Permintaan akan diproses setelah identitas pemohon dapat diverifikasi.</p>
+
+      <div class="divider"></div>
+
+      <h2>2. Data yang Dapat Dihapus</h2>
+      <p>Pengguna dapat meminta penghapusan terhadap data yang berkaitan dengan akun, termasuk apabila berlaku:</p>
+      <ul>
+        <li>Informasi profil.</li>
+        <li>Alamat email.</li>
+        <li>Foto profil.</li>
+        <li>Preferensi akun.</li>
+        <li>Data penggunaan tertentu.</li>
+        <li>Informasi lain yang berkaitan dengan akun pengguna.</li>
+      </ul>
+
+      <div class="divider"></div>
+
+      <h2>3. Data yang Mungkin Tetap Disimpan</h2>
+      <p>Dalam kondisi tertentu, XREZZKY OFFICIAL dapat tetap menyimpan sebagian data untuk jangka waktu yang diperlukan apabila diwajibkan atau diperbolehkan oleh hukum, atau untuk kepentingan yang sah, seperti:</p>
+      <ul>
+        <li>Investigasi dugaan pelanggaran.</li>
+        <li>Penanganan laporan penyalahgunaan.</li>
+        <li>Pencegahan penipuan.</li>
+        <li>Keamanan sistem.</li>
+        <li>Penyelesaian sengketa.</li>
+        <li>Pemenuhan kewajiban hukum.</li>
+      </ul>
+      <p>Data yang dipertahankan hanya digunakan untuk tujuan tersebut.</p>
+
+      <div class="divider"></div>
+
+      <h2>4. Cara Mengajukan Penghapusan</h2>
+      <p>Pengguna dapat mengajukan permintaan melalui email resmi:</p>
+      <div class="highlight-box">
+        <p><strong>Email:</strong> <a href="mailto:xrezzkyofficial@gmail.com" style="color:var(--accent);font-weight:700;">xrezzkyofficial@gmail.com</a></p>
+      </div>
+      <p><strong>Permohonan sebaiknya menyertakan:</strong></p>
+      <ul>
+        <li>Nama pengguna (Username)</li>
+        <li>Alamat email akun</li>
+        <li>Penjelasan singkat mengenai permintaan</li>
+        <li>Informasi tambahan yang diperlukan untuk membantu verifikasi identitas</li>
+      </ul>
+      <p>Kami dapat meminta informasi tambahan apabila diperlukan untuk memastikan bahwa permintaan diajukan oleh pemilik akun yang sah.</p>
+
+      <div class="divider"></div>
+
+      <h2>5. Proses Verifikasi</h2>
+      <p>Demi menjaga keamanan akun, setiap permintaan penghapusan dapat melalui proses verifikasi identitas.</p>
+      <p>Apabila identitas tidak dapat diverifikasi secara memadai, kami dapat menolak atau menunda permintaan sampai proses verifikasi selesai.</p>
+
+      <div class="divider"></div>
+
+      <h2>6. Waktu Pemrosesan</h2>
+      <p>Kami akan berupaya memproses permintaan penghapusan dalam waktu yang wajar setelah proses verifikasi selesai.</p>
+      <p>Dalam kondisi tertentu, proses dapat memerlukan waktu lebih lama, misalnya apabila terdapat investigasi keamanan, sengketa, atau kewajiban hukum yang sedang berlangsung.</p>
+
+      <div class="divider"></div>
+
+      <h2>7. Dampak Penghapusan</h2>
+      <p>Setelah penghapusan akun diproses:</p>
+      <ul>
+        <li>Pengguna mungkin kehilangan akses ke akun dan layanan terkait.</li>
+        <li>Data yang telah dihapus mungkin tidak dapat dipulihkan.</li>
+        <li>Sebagian informasi dapat tetap disimpan sesuai ketentuan pada bagian "Data yang Mungkin Tetap Disimpan".</li>
+      </ul>
+
+      <div class="divider"></div>
+
+      <h2>8. Penghapusan Otomatis</h2>
+      <p>Pada beberapa layanan, data tertentu dapat dihapus secara otomatis sesuai dengan kebutuhan operasional atau kebijakan retensi data yang berlaku.</p>
+      <p>Kebijakan ini dapat berbeda untuk setiap layanan XREZZKY OFFICIAL.</p>
+
+      <div class="divider"></div>
+
+      <h2>9. Perubahan Kebijakan</h2>
+      <p>XREZZKY OFFICIAL dapat memperbarui Kebijakan Penghapusan Data ini dari waktu ke waktu.</p>
+      <p>Versi terbaru akan dipublikasikan melalui website resmi.</p>
+
+      <div class="divider"></div>
+
+      <h2>10. Hubungi Kami</h2>
+      <p>Apabila memiliki pertanyaan mengenai Kebijakan Penghapusan Data, silakan menghubungi:</p>
+      <div class="highlight-box">
+        <p><strong>XREZZKY OFFICIAL</strong></p>
+        <p><strong>Email:</strong> <a href="mailto:xrezzkyofficial@gmail.com" style="color:var(--accent);font-weight:700;">xrezzkyofficial@gmail.com</a></p>
+        <p><strong>Website:</strong> <a href="https://xrezzkybeta.my.id" style="color:var(--accent);font-weight:700;">https://xrezzkybeta.my.id</a></p>
+      </div>
+
+      <div class="divider"></div>
+
+      <h2>Penutup</h2>
+      <p>XREZZKY OFFICIAL berkomitmen untuk menghormati privasi dan hak pengguna atas data pribadi mereka. Kami akan memproses setiap permintaan penghapusan data dengan memperhatikan keamanan, kewajiban hukum, dan kepentingan seluruh pengguna layanan.</p>
+
+    </div>
+  </div>
+
+  <div class="legal-footer-nav">
+    <a href="index.html#page-kebijakan" class="back-to-policy">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Kembali ke Kebijakan
+    </a>
+    <span class="legal-updated">Terakhir diperbarui: 14 Juli 2026</span>
+  </div>
+</div>
+
+<div class="footer">
+  <span>© 2026 XREZZKY OFFICIAL</span>
+
+</div>
+
+<script>
+function toggleTheme(){
+  var cur = document.documentElement.getAttribute('data-theme') || 'light';
+  var next = cur === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  try{ localStorage.setItem('_theme', next); }catch(e){}
+}
+</script>
+</body>
+  </html>
