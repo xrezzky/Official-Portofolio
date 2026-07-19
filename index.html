@@ -18,7 +18,21 @@
 
 <script>
 function el(id){ return document.getElementById(id); }
-function show(id){ const e=el(id); if(e) e.style.display=''; }
+let _fadeOrder = 0;
+function show(id){
+  const e=el(id);
+  if(!e) return;
+  const notYetShown = !e.dataset.everShown;
+  e.style.display='';
+  if(notYetShown){
+    e.dataset.everShown='1';
+    e.classList.remove('fade-in');
+    void e.offsetWidth;
+    e.style.animationDelay = (_fadeOrder * 60) + 'ms';
+    _fadeOrder++;
+    e.classList.add('fade-in');
+  }
+}
 function hide(id){ const e=el(id); if(e) e.style.display='none'; }
 function setText(id,val){ const e=el(id); if(e) e.textContent=val; }
 
@@ -195,6 +209,16 @@ function applyData(d){
   if(f.copy){setText('footer-copy',f.copy);show('footer-copy');}else hide('footer-copy');
   if(f.tagline){setText('footer-tagline',f.tagline);show('footer-tagline');}else hide('footer-tagline');
   if(f.version) setText('footer-version-num',f.version);
+
+  if(!window._contentRevealed){
+    window._contentRevealed = true;
+    const skel = document.getElementById('skeleton-wrap');
+    const real = document.getElementById('real-content');
+    if(skel && real){
+      skel.classList.add('hidden');
+      requestAnimationFrame(()=>{ real.classList.add('ready'); });
+    }
+  }
 }
 
 const API_BASE = '';
@@ -207,10 +231,25 @@ async function fetchSiteData(){
     applyData(data);
   }catch(e){
     console.error('Gagal ambil data:', e);
+    if(!window._contentRevealed){
+      window._contentRevealed = true;
+      const skel = document.getElementById('skeleton-wrap');
+      const real = document.getElementById('real-content');
+      if(skel && real){ skel.classList.add('hidden'); real.classList.add('ready'); }
+    }
   }
 }
 fetchSiteData();
 setInterval(fetchSiteData, 20000);
+
+setTimeout(function(){
+  if(!window._contentRevealed){
+    window._contentRevealed = true;
+    const skel = document.getElementById('skeleton-wrap');
+    const real = document.getElementById('real-content');
+    if(skel && real){ skel.classList.add('hidden'); real.classList.add('ready'); }
+  }
+}, 8000);
 
 (function(){
   var PING_INTERVAL_MS = 30000;
@@ -251,7 +290,6 @@ setInterval(fetchSiteData, 20000);
   window.addEventListener('beforeunload', leaveNow);
 })();
 </script>
-
 <style>
 :root{
   --accent:#2563EB;--accent2:#1D4ED8;--bg:#F5F7FB;--card:#FFFFFF;
@@ -269,6 +307,66 @@ html[data-theme="dark"]{
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden;transition:background 0.2s ease,color 0.2s ease}
 .card,.hero,.hero-body,.stat-card,.social-btn,.weblink-btn,.wa-item,.ann-item,.faq-item,.visitor-card,.gmail-btn,.sidebar{transition:background 0.2s ease,border-color 0.2s ease,color 0.2s ease,box-shadow 0.15s ease,transform 0.15s ease}
+
+/* ── ANIMASI MASUK KONTEN ── */
+@keyframes fadeInUp{
+  from{opacity:0;transform:translateY(14px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.fade-in{animation:fadeInUp 0.45s cubic-bezier(.16,1,.3,1) both}
+
+/* ── SKELETON LOADING ── */
+@keyframes shimmer{
+  0%{background-position:-200% 0}
+  100%{background-position:200% 0}
+}
+.skeleton{
+  background:linear-gradient(90deg,var(--card2) 25%,rgba(37,99,235,0.08) 50%,var(--card2) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.6s ease-in-out infinite;
+  border-radius:10px;
+}
+.skel-hero{height:220px;border-radius:20px 20px 0 0}
+.skel-line{height:14px;border-radius:6px;margin-bottom:8px}
+.skel-line.w-60{width:60%}
+.skel-line.w-40{width:40%}
+.skel-line.w-80{width:80%}
+.skel-card{height:76px;border-radius:12px;margin-bottom:9px}
+.skel-stat{height:90px;border-radius:14px}
+#skeleton-wrap{display:flex;flex-direction:column;gap:14px}
+#skeleton-wrap.hidden{display:none}
+#real-content{opacity:0;transition:opacity 0.3s ease}
+#real-content.ready{opacity:1}
+
+/* Item di dalam grid ikut fade-in stagger saat parent muncul */
+#stats-grid.fade-in .stat-card,
+#socials-grid.fade-in .social-btn,
+#weblinks-grid.fade-in .weblink-btn,
+#services-grid.fade-in .service-card,
+#branches-grid.fade-in .branch-card,
+#ann-list.fade-in .ann-item,
+#wa-list.fade-in .wa-item,
+#works-grid.fade-in .work-card,
+.legal-docs-grid .legal-doc-card{
+  animation:fadeInUp 0.4s cubic-bezier(.16,1,.3,1) both;
+}
+#stats-grid .stat-card:nth-child(1){animation-delay:0.03s}
+#stats-grid .stat-card:nth-child(2){animation-delay:0.08s}
+#stats-grid .stat-card:nth-child(3){animation-delay:0.13s}
+#stats-grid .stat-card:nth-child(4){animation-delay:0.18s}
+#socials-grid .social-btn:nth-child(1),#weblinks-grid .weblink-btn:nth-child(1),#services-grid .service-card:nth-child(1),#branches-grid .branch-card:nth-child(1),#ann-list .ann-item:nth-child(1),#wa-list .wa-item:nth-child(1),#works-grid .work-card:nth-child(1){animation-delay:0.02s}
+#socials-grid .social-btn:nth-child(2),#weblinks-grid .weblink-btn:nth-child(2),#services-grid .service-card:nth-child(2),#branches-grid .branch-card:nth-child(2),#ann-list .ann-item:nth-child(2),#wa-list .wa-item:nth-child(2),#works-grid .work-card:nth-child(2){animation-delay:0.07s}
+#socials-grid .social-btn:nth-child(3),#weblinks-grid .weblink-btn:nth-child(3),#services-grid .service-card:nth-child(3),#branches-grid .branch-card:nth-child(3),#ann-list .ann-item:nth-child(3),#wa-list .wa-item:nth-child(3),#works-grid .work-card:nth-child(3){animation-delay:0.12s}
+#socials-grid .social-btn:nth-child(4),#weblinks-grid .weblink-btn:nth-child(4),#services-grid .service-card:nth-child(4),#branches-grid .branch-card:nth-child(4),#ann-list .ann-item:nth-child(4),#wa-list .wa-item:nth-child(4),#works-grid .work-card:nth-child(4){animation-delay:0.17s}
+#socials-grid .social-btn:nth-child(5),#weblinks-grid .weblink-btn:nth-child(5),#services-grid .service-card:nth-child(5),#branches-grid .branch-card:nth-child(5),#ann-list .ann-item:nth-child(5),#wa-list .wa-item:nth-child(5),#works-grid .work-card:nth-child(5){animation-delay:0.22s}
+#socials-grid .social-btn:nth-child(n+6),#weblinks-grid .weblink-btn:nth-child(n+6),#services-grid .service-card:nth-child(n+6),#branches-grid .branch-card:nth-child(n+6),#ann-list .ann-item:nth-child(n+6),#wa-list .wa-item:nth-child(n+6),#works-grid .work-card:nth-child(n+6){animation-delay:0.27s}
+.legal-docs-grid .legal-doc-card:nth-child(1){animation-delay:0.02s}
+.legal-docs-grid .legal-doc-card:nth-child(2){animation-delay:0.06s}
+.legal-docs-grid .legal-doc-card:nth-child(3){animation-delay:0.10s}
+.legal-docs-grid .legal-doc-card:nth-child(4){animation-delay:0.14s}
+.legal-docs-grid .legal-doc-card:nth-child(5){animation-delay:0.18s}
+.legal-docs-grid .legal-doc-card:nth-child(6){animation-delay:0.22s}
+.legal-docs-grid .legal-doc-card:nth-child(7){animation-delay:0.26s}
 
 .app{display:flex;min-height:100vh;min-height:100dvh;max-width:100vw;overflow-x:hidden}
 
@@ -552,174 +650,28 @@ html[data-theme="dark"] .update-tag{background:var(--card2)}
 .work-cat{font-size:11px;color:var(--muted);margin-top:2px;font-weight:600}
 
 /* ===== LEGAL CENTER STYLES ===== */
-.legal-docs-section {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 2px solid var(--border);
-}
-
-.legal-docs-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.legal-docs-header .legal-icon svg {
-  width: 24px;
-  height: 24px;
-  stroke: var(--accent);
-}
-
-.legal-docs-header h3 {
-  font-family: var(--font-d);
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text);
-}
-
-.legal-docs-header .legal-sub {
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 600;
-  margin-left: 4px;
-}
-
-.legal-docs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
-  margin-top: 4px;
-}
-
-.legal-doc-card {
-  background: var(--card2);
-  border: 2px solid var(--border);
-  border-radius: 14px;
-  padding: 18px 16px 16px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  text-decoration: none;
-  color: var(--text);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-}
-
-.legal-doc-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--accent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.legal-doc-card:hover {
-  transform: translate(-3px, -3px);
-  box-shadow: 5px 5px 0 var(--border);
-}
-
-.legal-doc-card:hover::before {
-  opacity: 1;
-}
-
-.legal-doc-card-top {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.legal-doc-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  background: #EFF6FF;
-  border: 2px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-html[data-theme="dark"] .legal-doc-icon {
-  background: var(--card);
-}
-
-.legal-doc-icon svg {
-  width: 20px;
-  height: 20px;
-  stroke: var(--accent);
-}
-
-.legal-doc-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.legal-doc-title {
-  font-family: var(--font-d);
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--text);
-  line-height: 1.3;
-}
-
-.legal-doc-desc {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 3px;
-  line-height: 1.4;
-  font-weight: 500;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.legal-doc-btn {
-  margin-top: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 8px;
-  background: var(--card);
-  border: 2px solid var(--border);
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--text);
-  transition: all 0.15s ease;
-  font-family: var(--font-b);
-  align-self: flex-start;
-}
-
-.legal-doc-card:hover .legal-doc-btn {
-  background: var(--accent);
-  color: #fff;
-  transform: translate(-1px, -1px);
-  box-shadow: 2px 2px 0 var(--border);
-}
-
-.legal-doc-btn svg {
-  width: 12px;
-  height: 12px;
-  transition: transform 0.15s;
-}
-
-.legal-doc-card:hover .legal-doc-btn svg {
-  transform: translate(2px, -2px);
-}
-
-@media(max-width:899px){
-  .legal-docs-grid { grid-template-columns: 1fr; }
-}
+.legal-docs-section{margin-top:24px;padding-top:24px;border-top:2px solid var(--border)}
+.legal-docs-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.legal-docs-header .legal-icon svg{width:24px;height:24px;stroke:var(--accent)}
+.legal-docs-header h3{font-family:var(--font-d);font-size:18px;font-weight:800;color:var(--text)}
+.legal-docs-header .legal-sub{font-size:12px;color:var(--muted);font-weight:600;margin-left:4px}
+.legal-docs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:4px}
+.legal-doc-card{background:var(--card2);border:2px solid var(--border);border-radius:14px;padding:18px 16px 16px;transition:all 0.2s ease;cursor:pointer;text-decoration:none;color:var(--text);display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:var(--shadow-sm)}
+.legal-doc-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);opacity:0;transition:opacity 0.3s ease}
+.legal-doc-card:hover{transform:translate(-3px,-3px);box-shadow:5px 5px 0 var(--border)}
+.legal-doc-card:hover::before{opacity:1}
+.legal-doc-card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px}
+.legal-doc-icon{width:42px;height:42px;border-radius:10px;background:#EFF6FF;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+html[data-theme="dark"] .legal-doc-icon{background:var(--card)}
+.legal-doc-icon svg{width:20px;height:20px;stroke:var(--accent)}
+.legal-doc-info{flex:1;min-width:0}
+.legal-doc-title{font-family:var(--font-d);font-size:14px;font-weight:800;color:var(--text);line-height:1.3}
+.legal-doc-desc{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.legal-doc-btn{margin-top:12px;display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;background:var(--card);border:2px solid var(--border);font-size:11.5px;font-weight:700;color:var(--text);transition:all 0.15s ease;font-family:var(--font-b);align-self:flex-start}
+.legal-doc-card:hover .legal-doc-btn{background:var(--accent);color:#fff;transform:translate(-1px,-1px);box-shadow:2px 2px 0 var(--border)}
+.legal-doc-btn svg{width:12px;height:12px;transition:transform 0.15s}
+.legal-doc-card:hover .legal-doc-btn svg{transform:translate(2px,-2px)}
+@media(max-width:899px){.legal-docs-grid{grid-template-columns:1fr}}
 
 @media(min-width:900px){
   .topbar-actions{padding:0 40px}
@@ -834,6 +786,29 @@ html[data-theme="dark"] .legal-doc-icon {
   <div class="accent-glow2"></div>
 
   <div class="page active" id="page-home">
+
+    <!-- SKELETON LOADING — tampil sebelum data Firebase datang -->
+    <div id="skeleton-wrap">
+      <div class="skeleton skel-hero"></div>
+      <div style="padding:16px 4px">
+        <div class="skeleton skel-line w-40" style="height:22px;margin-bottom:12px"></div>
+        <div class="skeleton skel-line w-60"></div>
+        <div class="skeleton skel-line w-80"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:6px">
+        <div class="skeleton skel-stat"></div>
+        <div class="skeleton skel-stat"></div>
+        <div class="skeleton skel-stat"></div>
+        <div class="skeleton skel-stat"></div>
+      </div>
+      <div style="margin-top:16px">
+        <div class="skeleton skel-card"></div>
+        <div class="skeleton skel-card"></div>
+        <div class="skeleton skel-card"></div>
+      </div>
+    </div>
+
+    <div id="real-content">
     <div class="hero">
       <div id="banner-bg">
         <div class="hero-shine"></div>
@@ -946,6 +921,7 @@ html[data-theme="dark"] .legal-doc-icon {
       <div class="sec-label">Cabang Kami</div>
       <div id="branches-grid" class="branches-grid"></div>
     </div>
+    </div><!-- /real-content -->
   </div>
 
   <div class="page" id="page-faq">
@@ -965,19 +941,17 @@ html[data-theme="dark"] .legal-doc-icon {
 
   <div class="page" id="page-kebijakan">
     <div class="page-section"><div class="page-section-title">Kebijakan & Aturan</div><div class="page-section-sub">Harap baca dan pahami kebijakan kami</div></div>
-    
-    <!-- Konten Kebijakan yang sudah ada tetap dipertahankan -->
+
     <div class="card" id="policy-section" style="display:none">
       <div class="card-title"><div class="card-dot"></div> Kebijakan</div>
       <div class="prose" id="policy-content"></div>
     </div>
-    
+
     <div class="card"><div class="card-title"><div class="card-dot"></div> Pertanyaan Kebijakan</div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Ada pertanyaan terkait kebijakan?</p>
       <a href="mailto:xrezzkystore.idn@gmail.com" class="gmail-btn"><div class="gmail-icon"><svg width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 24L4 10h40z"/><path fill="#FBBC04" d="M4 10v28l10-14z"/><path fill="#34A853" d="M44 10v28L34 24z"/><path fill="#4285F4" d="M4 38h40L24 24z"/><path fill="#C5221F" d="M4 10l20 14 20-14z" opacity=".3"/></svg></div><div class="gmail-info"><div class="gl">Gmail Admin</div><div class="ge">xrezzkystore.idn@gmail.com</div></div></a>
     </div>
 
-    <!-- ===== SECTION DOKUMEN LEGAL ===== -->
     <div class="legal-docs-section">
       <div class="legal-docs-header">
         <span class="legal-icon">
@@ -987,7 +961,6 @@ html[data-theme="dark"] .legal-doc-icon {
         <span class="legal-sub">— Pusat Kebijakan XREZZKY</span>
       </div>
       <div class="legal-docs-grid">
-        <!-- Privacy Policy -->
         <a href="privacy.html" class="legal-doc-card">
           <div class="legal-doc-card-top">
             <div class="legal-doc-icon">
@@ -1001,7 +974,6 @@ html[data-theme="dark"] .legal-doc-icon {
           <span class="legal-doc-btn">Buka <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
         </a>
 
-        <!-- Terms of Service -->
         <a href="terms.html" class="legal-doc-card">
           <div class="legal-doc-card-top">
             <div class="legal-doc-icon">
@@ -1015,7 +987,6 @@ html[data-theme="dark"] .legal-doc-icon {
           <span class="legal-doc-btn">Buka <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
         </a>
 
-        <!-- Marketplace Policy -->
         <a href="marketplace-policy.html" class="legal-doc-card">
           <div class="legal-doc-card-top">
             <div class="legal-doc-icon">
@@ -1029,7 +1000,6 @@ html[data-theme="dark"] .legal-doc-icon {
           <span class="legal-doc-btn">Buka <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
         </a>
 
-        <!-- Community Guidelines -->
         <a href="community-guidelines.html" class="legal-doc-card">
           <div class="legal-doc-card-top">
             <div class="legal-doc-icon">
@@ -1043,7 +1013,6 @@ html[data-theme="dark"] .legal-doc-icon {
           <span class="legal-doc-btn">Buka <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
         </a>
 
-        <!-- AI Usage Policy -->
         <a href="ai-policy.html" class="legal-doc-card">
           <div class="legal-doc-card-top">
             <div class="legal-doc-icon">
@@ -1057,7 +1026,6 @@ html[data-theme="dark"] .legal-doc-icon {
           <span class="legal-doc-btn">Buka <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
         </a>
 
-        <!-- Anonymous Chat Policy -->
         <a href="anonymous-chat-policy.html" class="legal-doc-card">
           <div class="legal-doc-card-top">
             <div class="legal-doc-icon">
@@ -1071,7 +1039,6 @@ html[data-theme="dark"] .legal-doc-icon {
           <span class="legal-doc-btn">Buka <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
         </a>
 
-        <!-- Data Deletion -->
         <a href="data-deletion.html" class="legal-doc-card">
           <div class="legal-doc-card-top">
             <div class="legal-doc-icon">
@@ -1086,7 +1053,6 @@ html[data-theme="dark"] .legal-doc-icon {
         </a>
       </div>
     </div>
-    <!-- ===== END DOKUMEN LEGAL ===== -->
   </div>
 
   <footer>
@@ -1251,4 +1217,4 @@ window.addEventListener('resize', function(){ closeSidebar(); });
 window.addEventListener('orientationchange', function(){ closeSidebar(); });
 </script>
 </body>
-  </html>
+</html>
